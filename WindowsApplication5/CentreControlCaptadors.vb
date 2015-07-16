@@ -850,6 +850,7 @@ Public Class Form1
 
                         'Esborrem els missatges rebuts i llegits:
                         SerialPort1.Write("AT+CMGD=1" & Chr(13))
+
                     End While
 
                 Catch ex As Exception
