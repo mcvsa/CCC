@@ -8,6 +8,7 @@ Imports System.Net.Mail
 Public Class Form1
     Dim captadors As New List(Of Captador)
     Public Shared connectStablished As Boolean = False
+    Public Shared tancant As Boolean = False
     Public Shared freeSpace As Boolean = True
     Dim threadDiskSpace As New Thread(AddressOf SpaceWorker)
     Delegate Sub MostraHistorialCallback([nomCaptador] As String)
@@ -170,71 +171,72 @@ Public Class Form1
 
         If Me.DataGridView.InvokeRequired Then
             Dim d As New UpdateDataGridViewCallback(AddressOf updateDataGridView)
-            Try
-                Me.Invoke(d, New Object() {[capta]})
-            Catch ex As Exception
-                RoundLog("UpdateDataGridView Thread exception: " & ex.Message)
-            End Try
-
+            Me.Invoke(d, New Object() {[capta]})
+            
         Else
+            If Not tancant Then
+                Dim crrntRow As Integer
+                Dim indexa As Integer
+                Dim fecha As String = ""
 
-            Dim crrntRow As Integer
-            Dim indexa As Integer
-            Dim fecha As String = ""
+                'Recuperem el darrer estat i missatge coneguts
+                capta.FuncioDarrerEstatConegut()
 
-            'Recuperem el darrer estat i missatge coneguts
-            capta.FuncioDarrerEstatConegut()
+                Dim form = capta.LastMessage
+                Dim lastMessage = ""
 
-            Dim form = capta.LastMessage
-            Dim lastMessage = ""
-
-            indexa = form.IndexOf(" , ")
-            If indexa >= 0 Then
-                fecha = form.Substring(0, indexa).Trim
-                indexa = form.LastIndexOf(" , ")
-                lastMessage = form.Substring(indexa + 2).Trim
-            Else
-                fecha = ""
-            End If
-
-            crrntRow = -1
-            If DataGridView.DisplayedRowCount(False) <> 0 Then
-                crrntRow = DataGridView.CurrentRow.Index
-            End If
-
-            Dim fila() As String = {capta.Nom, capta.LastState, lastMessage, fecha, capta.Actiu}
-            'Busquem si el captador ja està al DataGridView per actualitzar-lo i no afegir-lo si existeix
-            Dim rowindex As Integer = -1
-            For Each row As DataGridViewRow In DataGridView.Rows
-                If row.Cells.Item(0).Value = capta.Nom Then
-                    rowindex = row.Index
+                indexa = form.IndexOf(" , ")
+                If indexa >= 0 Then
+                    fecha = form.Substring(0, indexa).Trim
+                    indexa = form.LastIndexOf(" , ")
+                    lastMessage = form.Substring(indexa + 2).Trim
+                Else
+                    fecha = ""
                 End If
-            Next
-            If rowindex >= 0 Then
-                DataGridView.Rows(rowindex).SetValues(fila)
-            Else
-                DataGridView.Rows.Add(fila)
-                rowindex = DataGridView.Rows.Count - 1
-            End If
-            Select Case capta.LastState
-                Case Captador.ALARMA
-                    DataGridView.Item(1, rowindex).Style.BackColor = Color.Red
-                Case Captador.ALARMA_RED
-                    DataGridView.Item(1, rowindex).Style.BackColor = Color.Red
-                Case Captador.FIN_CICLO
-                    DataGridView.Item(1, rowindex).Style.BackColor = Color.Yellow
-                Case Captador.WARNING
-                    DataGridView.Item(1, rowindex).Style.BackColor = Color.Yellow
-                Case Captador.RED_OK
-                    DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
-                Case Captador.TOT_OK
-                    DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
-            End Select
 
-            If crrntRow <> -1 And crrntRow < DataGridView.Rows.Count Then
-                DataGridView.CurrentCell = DataGridView(0, crrntRow)
-            Else
-                DataGridView.ClearSelection()
+                crrntRow = -1
+                If DataGridView.DisplayedRowCount(False) <> 0 Then
+                    crrntRow = DataGridView.CurrentRow.Index
+                End If
+
+                Dim fila() As String = {capta.Nom, capta.LastState, lastMessage, fecha, capta.Actiu}
+                'Busquem si el captador ja està al DataGridView per actualitzar-lo i no afegir-lo si existeix
+                Dim rowindex As Integer = -1
+                For Each row As DataGridViewRow In DataGridView.Rows
+                    If row.Cells.Item(0).Value = capta.Nom Then
+                        rowindex = row.Index
+                    End If
+                Next
+                If rowindex >= 0 Then
+                    DataGridView.Rows(rowindex).SetValues(fila)
+                Else
+                    DataGridView.Rows.Add(fila)
+                    rowindex = DataGridView.Rows.Count - 1
+                End If
+                Select Case capta.LastState
+                    Case Captador.ALARMA
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.Red
+                    Case Captador.ALARMA_RED
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.Red
+                    Case Captador.FIN_CICLO
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.Yellow
+                    Case Captador.WARNING
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.Yellow
+                    Case Captador.RED_OK
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
+                    Case Captador.TOT_OK
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
+                    Case Captador.FIN_FILTRO
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
+                    Case Else
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.White
+                End Select
+
+                If crrntRow <> -1 And crrntRow < DataGridView.Rows.Count Then
+                    DataGridView.CurrentCell = DataGridView(0, crrntRow)
+                Else
+                    DataGridView.ClearSelection()
+                End If
             End If
         End If
 
@@ -246,7 +248,11 @@ Public Class Form1
 
         If Me.LVLastMessages.InvokeRequired Then
             Dim x As New UpdateLastDataCallback(AddressOf UpdateLastData)
-            Me.Invoke(x)
+            Try
+                Me.Invoke(x)
+            Catch ex As Exception
+                RoundLog(ex.ToString)
+            End Try
         Else
             vectorSMS.Sort()
             vectorSMS.Reverse()
@@ -368,18 +374,20 @@ Public Class Form1
                 RoundLog("MostraHistorial Thread exception: " & ex.Message)
             End Try
         Else
-            Dim filereader As String
+            If Not tancant Then
+                Dim filereader As String
 
-            filereader = ""
-            TBoxHistoric.Text = ""
+                filereader = ""
+                TBoxHistoric.Text = ""
 
-            If nomCaptador <> Nothing Then
-                If My.Computer.FileSystem.FileExists(PATH_REGISTRES + nomCaptador) Then
-                    filereader = My.Computer.FileSystem.ReadAllText(PATH_REGISTRES + nomCaptador)
-                    TBoxHistoric.Text = filereader
+                If nomCaptador <> Nothing Then
+                    If My.Computer.FileSystem.FileExists(PATH_REGISTRES + nomCaptador) Then
+                        filereader = My.Computer.FileSystem.ReadAllText(PATH_REGISTRES + nomCaptador)
+                        TBoxHistoric.Text = filereader
 
-                    'Else
-                    '   MsgBox("No s'ha trobat l'arxiu de dades associades a aquest captador", vbOKOnly)
+                        'Else
+                        '   MsgBox("No s'ha trobat l'arxiu de dades associades a aquest captador", vbOKOnly)
+                    End If
                 End If
             End If
         End If
@@ -670,33 +678,52 @@ Public Class Form1
             Dim finalChain As String = "OK" & vbCr & ""
             Dim texts As New List(Of SMSText)
 
-            'Forcem mode 'detalls' al mòdem (que no mostri números, sino 'OK' i detalls)
+            'Ressetegem el mòdem
             Try
-                SerialPort1.Write("ATV1" & Chr(13))
-                response = SerialPort1.ReadLine.ToString
-
-                While (response <> "OK" & vbCr & "")
-                    returnstr &= response & vbCrLf
-                    response = SerialPort1.ReadLine.ToString
-                End While
+                If SerialPort1.IsOpen Then
+                    SerialPort1.Write("ATZ" & Chr(13))
+                    response = SerialPort1.ReadExisting
+                    While (response.IndexOf("0") < 0 And response.IndexOf("OK") < 0)
+                        response += SerialPort1.ReadExisting
+                    End While
+                    response = ""
+                End If
             Catch ex As Exception
                 MsgBox(ex.Message, vbCritical)
-                RoundLog("SMSWorker: response ATV1 error" & ex.Message)
+                RoundLog("SMSWorker: response ATZ error-" & ex.Message)
+                connectStablished = False
+                ChangeConnectSign(-1)
+            End Try
+            'Forcem mode 'detalls' al mòdem (que no mostri números, sino 'OK' i detalls)
+            Try
+                If SerialPort1.IsOpen Then
+                    'SerialPort1.Write("ATZ" & Chr(13))
+                    SerialPort1.Write("ATV1" & Chr(13))
+
+                    response = SerialPort1.ReadExisting
+                    While (response.IndexOf("OK") < 0 And SerialPort1.BytesToRead > 0)
+                        response += SerialPort1.ReadExisting
+                    End While
+                    response = ""
+                End If
+            Catch ex As Exception
+                MsgBox(ex.Message, vbCritical)
+                RoundLog("SMSWorker: response ATV1 error-" & ex.Message)
                 connectStablished = False
                 ChangeConnectSign(-1)
             End Try
             'Forcem mode text al mòdem
             Try
-                SerialPort1.Write("AT+CMGF=1" & Chr(13))
-                response = SerialPort1.ReadLine.ToString
-
-                While (response <> "OK" & vbCr & "")
-                    returnstr &= response & vbCrLf
-                    response = SerialPort1.ReadLine.ToString
-                End While
+                If SerialPort1.IsOpen Then
+                    SerialPort1.Write("AT+CMGF=1" & Chr(13))
+                    response = SerialPort1.ReadExisting
+                    While (response.IndexOf("OK") < 0 And SerialPort1.BytesToRead > 0)
+                        response = SerialPort1.ReadExisting
+                    End While
+                End If
             Catch ex As Exception
                 MsgBox(ex.Message, vbCritical)
-                RoundLog("SMSWorker: response AT+CMGF=1 error" & ex.Message)
+                RoundLog("SMSWorker: response AT+CMGF=1 error-" & ex.Message)
                 connectStablished = False
                 ChangeConnectSign(-1)
             End Try
@@ -705,6 +732,9 @@ Public Class Form1
                 returnstr = ""
                 response = ""
 
+                SerialPort1.DiscardInBuffer()
+                SerialPort1.DiscardOutBuffer()
+                '                Thread.Sleep(1000)
                 Try
                     'Llegir els no llegits:
                     SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
@@ -712,146 +742,12 @@ Public Class Form1
                     'Llegir TOTS els SMS:
                     'SerialPort1.Write("AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
 
-                    response = SerialPort1.ReadLine.ToString
+                    response = SerialPort1.ReadExisting
 
-                    While (response <> finalChain)
-                        returnstr &= response & vbCrLf
-                        response = SerialPort1.ReadLine.ToString
+                    ' And SerialPort1.BytesToRead > 0
+                    While (response.IndexOf(finalChain) < 0)
+                        response += SerialPort1.ReadLine
                     End While
-
-                    'Preparem la resposta per a no tenir problemes amb '\0D' o vbCr
-                    returnstr.Replace("\0D", vbCr)
-
-                    While returnstr.Length > 59 '59 serà el mínim número de caràcters si rebem un SMS
-                        'Generem un nou element SMS
-                        Dim txt As New SMSText
-                        'Buscar "+CMGL: "
-                        Dim indexa = returnstr.IndexOf("+CMGL: ")
-                        Dim indexb As Integer = 0
-                        'Esborrem la primera part del text (que no ens serveix)
-                        returnstr = returnstr.Remove(0, indexa - 1)
-                        'Tornem a indexar
-                        indexa = returnstr.IndexOf("+CMGL: ")
-                        'El número de SMS serà de indexa fins a la ','
-                        indexb = returnstr.IndexOf(",")
-                        Dim txtRead As String
-                        txtRead = returnstr.Substring(indexa + 7, indexb - indexa - 7)
-                        'Buscar +34
-                        indexa = returnstr.IndexOf("+34")
-                        'El número de telèfon serà indexa + 3 fins a indexa + 3 + 9
-                        txt.Phone = returnstr.Substring(indexa + 3, 9)
-                        'Eliminem part del missatge que ja no ens interessa
-                        returnstr = returnstr.Remove(0, indexa + 3 + 9)
-                        'Busquem el nom del captador
-                        'Mirem on comença el nom del captador
-                        indexb = returnstr.IndexOf(vbCrLf)
-                        'Esborrem fins on comença el nom del captador
-                        returnstr = returnstr.Remove(0, indexb + 1)
-                        indexb = 0
-                        'Busquem el final del nom del captador
-                        indexa = returnstr.IndexOf(vbCr)
-                        'El nom serà des del final del vbcrlf fins l'espai anterior al '\'
-                        txt.Name = returnstr.Substring(indexb + 1, indexa - indexb - 1).Trim
-                        'Eliminem part del missatge que ja no ens interessa
-                        returnstr = returnstr.Remove(0, indexa + 1)
-                        'Busquem data i hora d'enviament
-                        indexa = returnstr.IndexOf(vbCr)
-                        Dim datahora As DateTime
-                        datahora = returnstr.Substring(0, indexa)
-                        txt.DataHora = datahora.ToString("u")
-                        'Eliminem la part del missatge que no ens interessa
-                        returnstr = returnstr.Remove(0, indexa + 1)
-                        'Busquem el número de filtre
-                        indexb = returnstr.IndexOf("#")
-                        indexa = returnstr.IndexOf("/")
-                        txt.Filter = CInt(returnstr.Substring(indexb + 1, indexa - indexb - 1))
-                        'Busquem total filtres:
-                        indexb = returnstr.IndexOf(vbCr)
-                        txt.NumFilters = CInt(returnstr.Substring(indexa + 1, indexb - indexa - 1))
-                        'Esborrem part del missatge llegida. També esborrem el 'vbCr'
-                        returnstr = returnstr.Remove(0, indexb + 1)
-                        'El cos del missatge està des del principi, i fins el proper vbcr & vbcrlf
-                        indexa = returnstr.IndexOf(vbCr & vbCrLf)
-                        'Cos del missatge: des del principi (obviem el vbCrLf fins el Chr(34)
-                        txt.Body = returnstr.Substring(0, indexa)
-                        'Esborrem la part llegida
-                        returnstr = returnstr.Remove(0, indexa)
-                        'Apuntem les dades corresponents al captador que toqui
-                        Dim indexCaptador As Integer
-                        indexCaptador = comprovaTelefon(txt.Phone)
-                        If indexCaptador >= 0 Or indexCaptador = -2 Then
-                            'Si indexCaptador = -2: Cal mostrar el missatge per a que l'usuari
-                            'pugui crear el captador i associar-li el telèfon
-                            Dim form As String
-                            form = ""
-                            form = txt.DataHora & " , " & txt.Name & " , " & txt.Phone & " , " & "Filtre: " _
-                                   & txt.Filter & " de " & txt.NumFilters & " , " & txt.Body
-
-                            vectorSMS.Add(form)
-                            'Ordenem el vector, per si arriben missatges del mateix captador desordenats
-                            vectorSMS.Sort()
-                            UpdateLastData()
-
-                            If indexCaptador >= 0 Then
-                                captadors(indexCaptador).addData(form)
-                                'Si el captador està seleccionat mostrarem l'historial actualitzat
-                                MostraHistorial(captadors(indexCaptador).Nom)
-
-                                'Actualitzem el panell dels darrers missatges i la resta de dades per pantalla
-                                '...sempre que el captador estigui actiu
-                                If captadors(indexCaptador).Actiu Then
-                                    updateDataGridView(captadors(indexCaptador))
-                                    'Envia mails amb un nou thread
-                                    MailConfiguration.getAlarmConfigs()
-                                    If MailConfiguration.mailAlarm = "1" Then
-                                        Dim threadMailerDaemon As New Thread(AddressOf MailerDaemonWorker)
-                                        threadMailerDaemon.Start(txt)
-                                    End If
-                                    'Envia SMS
-                                    If MailConfiguration.smsAlarm = "1" Then
-                                        Dim phone As String = ""
-                                        For Each phone In SMSConfiguration.getPhonesList
-                                            SMSConfiguration.sendSMS(phone, SerialPort1, txt.Name & "-" & txt.Body)
-                                            Thread.Sleep(TIME2SMS)
-                                            'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
-                                            Try
-                                                SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                                                response = ""
-                                                response = SerialPort1.ReadLine.ToString
-
-                                                While (response <> finalChain)
-                                                    returnstr &= response & vbCrLf
-                                                    response = SerialPort1.ReadLine.ToString
-                                                End While
-                                                returnstr.Replace("\0D", vbCr)
-                                                'Esborra tots els missatges llegits
-                                                SerialPort1.Write("AT+CMGD=1" & Chr(13))
-                                            Catch ex As Exception
-                                                MsgBox(ex.Message, vbCritical)
-                                                RoundLog("SMSWorker, error reading after sending message: " & ex.Message)
-                                                connectStablished = False
-                                                ChangeConnectSign(-1)
-                                                threadSMSON = False
-                                                Exit Sub
-                                            End Try
-                                        Next
-                                    End If
-                                End If
-                            End If
-
-                        ElseIf (indexCaptador = -1) Then
-                            RoundLog("Telèfon " & txt.Phone & " erroni")
-                        Else
-                            RoundLog("Error amb el telèfon " & txt.Phone)
-                        End If
-
-                        'Esborrem el missatge llegit:
-                        'SerialPort1.Write("AT+CMGD=" & txtRead & Chr(13))
-
-                        'Esborrem els missatges rebuts i llegits:
-                        SerialPort1.Write("AT+CMGD=1" & Chr(13))
-                    End While
-
                 Catch ex As Exception
                     MsgBox(ex.Message, vbCritical)
                     RoundLog("SMSWorker, connection stablished, but error: " & ex.Message)
@@ -859,9 +755,197 @@ Public Class Form1
                     ChangeConnectSign(-1)
                     Exit While
                 End Try
-        ChangeConnectSign(1)
-        Thread.Sleep(TIME4THREAD)
+                returnstr = response
+                'Preparem la resposta per a no tenir problemes amb '\0D' o vbCr
+                returnstr.Replace("\0D", vbCr)
+
+                While returnstr.Length > 59 '59 serà el mínim número de caràcters si rebem un SMS
+                    'Generem un nou element SMS
+                    Dim txt As New SMSText
+                    'Buscar "+CMGL: "
+                    Dim indexa = returnstr.IndexOf("+CMGL:")
+                    If indexa < 0 Then
+                        'No hi ha res més de nou per a llegir
+                        Exit While
+                    End If
+                    Dim indexb As Integer = 0
+                    'Esborrem la primera part del text (que no ens serveix)
+                    returnstr = returnstr.Remove(0, indexa + 6)
+                    'Tornem a indexar
+                    indexa = 0
+                    'El número de SMS serà de indexa fins a la ','
+                    indexb = returnstr.IndexOf(",")
+                    Dim txtRead As String
+                    txtRead = returnstr.Substring(indexa, indexb - indexa)
+                    'Buscar +34
+                    indexa = returnstr.IndexOf("+34")
+                    'El número de telèfon serà indexa + 3 fins a indexa + 3 + 9
+                    txt.Phone = returnstr.Substring(indexa + 3, 9)
+                    'Eliminem part del missatge que ja no ens interessa
+                    returnstr = returnstr.Remove(0, indexa + 3 + 9)
+                    'Busquem el nom del captador
+                    'Mirem on comença el nom del captador
+                    indexb = returnstr.IndexOf(vbCr)
+                    'Esborrem fins on comença el nom del captador
+                    returnstr = returnstr.Remove(0, indexb + 1)
+                    indexb = 0
+                    indexa = returnstr.IndexOf("+CMGL")
+                    If indexa < 0 Then
+                        'El darrer caràcter capturat hauria de ser "OK"
+                        indexa = returnstr.IndexOf("OK")
+                        If indexa < 0 Then
+                            indexa = returnstr.Length - 1
+                        End If
+                    End If
+                    Dim ashole = returnstr.Substring(indexb, indexa)
+                    If ashole.Length < 59 Then
+                        returnstr.Remove(indexb, indexa - indexb)
+                        Continue While
+                    End If
+
+                    'Busquem el final del nom del captador
+                    indexa = returnstr.IndexOf(vbCr)
+                    'El nom serà des del final del vbcrlf fins l'espai anterior al '\'
+                    txt.Name = returnstr.Substring(indexb + 1, indexa - indexb - 1).Trim
+                    'Dim ashole = txt.Name + vbCr
+                    'Eliminem part del missatge que ja no ens interessa
+                    returnstr = returnstr.Remove(0, indexa + 1)
+                    'Busquem data i hora d'enviament
+                    indexa = returnstr.IndexOf(vbCr)
+                    Dim datahora As DateTime
+                    Try
+                        datahora = returnstr.Substring(0, indexa)
+                        'ashole += returnstr.Substring(0, indexa) + vbCr
+                        txt.DataHora = datahora.ToString("u")
+                    Catch ex As Exception
+                        RoundLog("SMSWorker: SMS error-" & ex.Message)
+                        indexa = returnstr.IndexOf("+CMGL")
+                        If indexa < 0 Then
+                            indexa = returnstr.Length - 1
+                            returnstr.Remove(0, indexa)
+                            Continue While
+                        End If
+                    End Try
+                    'Eliminem la part del missatge que no ens interessa
+                    returnstr = returnstr.Remove(0, indexa + 1)
+                    'Busquem el número de filtre
+                    indexb = returnstr.IndexOf("#")
+                    indexa = returnstr.IndexOf("/")
+                    Try
+                        txt.Filter = CInt(returnstr.Substring(indexb + 1, indexa - indexb - 1))
+                        'Busquem total filtres:
+                        indexb = returnstr.IndexOf(vbCr)
+                        txt.NumFilters = CInt(returnstr.Substring(indexa + 1, indexb - indexa - 1))
+                    Catch ex As Exception
+                        RoundLog("SMSWorker: SMS error-" & ex.Message)
+                        indexa = returnstr.IndexOf("+CMGL")
+                        If indexa < 0 Then
+                            indexa = returnstr.Length - 1
+                            returnstr.Remove(0, indexa)
+                            Continue While
+                        End If
+                    End Try
+                    'Esborrem part del missatge llegida. També esborrem el 'vbCr'
+                    returnstr = returnstr.Remove(0, indexb + 1)
+                    'El cos del missatge està des del principi, i fins el proper SMS
+                    indexa = returnstr.IndexOf("+CMGL")
+                    If indexa < 0 Then
+                        'El darrer caràcter capturat hauria de ser "OK"
+                        indexa = returnstr.IndexOf("OK")
+                        If indexa < 0 Then
+                            indexa = returnstr.Length - 1
+                        End If
+                    End If
+                    txt.Body = returnstr.Substring(0, indexa)
+                    txt.AllMessage = ashole
+                    'Esborrem la part llegida
+                    returnstr = returnstr.Remove(0, indexa)
+                    'Apuntem les dades corresponents al captador que toqui
+                    Dim indexCaptador As Integer
+                    indexCaptador = comprovaTelefon(txt.Phone)
+                    If indexCaptador >= 0 Or indexCaptador = -2 Then
+                        'Si indexCaptador = -2: Cal mostrar el missatge per a que l'usuari
+                        'pugui crear el captador i associar-li el telèfon
+                        Dim form As String
+                        form = ""
+                        form = txt.DataHora & " , " & txt.Name & " , " & txt.Phone & " , " & "Filtre: " _
+                               & txt.Filter & " de " & txt.NumFilters & " , " & txt.Body
+
+                        vectorSMS.Add(form)
+                        'Ordenem el vector, per si arriben missatges del mateix captador desordenats
+                        vectorSMS.Sort()
+                        UpdateLastData()
+
+                        If indexCaptador >= 0 Then
+                            captadors(indexCaptador).addData(form)
+                            'Si el captador està seleccionat mostrarem l'historial actualitzat
+
+                            If DataGridView.CurrentRow.Index <> Nothing Then
+                                If DataGridView.CurrentRow.Index = indexCaptador Then
+                                    MostraHistorial(captadors(indexCaptador).Nom)
+                                End If
+                            End If
+
+                            'Actualitzem el panell dels darrers missatges i la resta de dades per pantalla
+                            '...sempre que el captador estigui actiu
+                            If captadors(indexCaptador).Actiu Then
+                                updateDataGridView(captadors(indexCaptador))
+                                'Envia mails amb un nou thread
+                                MailConfiguration.getAlarmConfigs()
+                                If MailConfiguration.mailAlarm = "1" Then
+                                    Dim threadMailerDaemon As New Thread(AddressOf MailerDaemonWorker)
+                                    threadMailerDaemon.Start(txt)
+                                End If
+                                'Envia SMS
+                                If MailConfiguration.smsAlarm = "1" Then
+                                    Dim phone As String = ""
+                                    For Each phone In SMSConfiguration.getPhonesList
+                                        SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
+                                        Thread.Sleep(TIME2SMS)
+                                        'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
+                                        Try
+                                            If connectStablished Then
+                                                SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                                                response = ""
+
+                                                While (response.IndexOf(finalChain))
+                                                    response = SerialPort1.ReadLine.ToString
+                                                End While
+                                                returnstr += response
+                                                returnstr.Replace("\0D", vbCr)
+                                                'Esborra tots els missatges llegits
+                                                SerialPort1.Write("AT+CMGD=1" & Chr(13))
+                                            End If
+                                        Catch ex As Exception
+                                            MsgBox(ex.Message, vbCritical)
+                                            RoundLog("SMSWorker, error reading after sending message: " & ex.Message)
+                                            connectStablished = False
+                                            ChangeConnectSign(-1)
+                                            threadSMSON = False
+                                            Exit Sub
+                                        End Try
+                                    Next
+                                End If
+                            End If
+                        End If
+
+                    ElseIf (indexCaptador = -1) Then
+                        RoundLog("Telèfon " & txt.Phone & " erroni")
+                    Else
+                        RoundLog("Error amb el telèfon " & txt.Phone)
+                    End If
+
+                    'Esborrem el missatge llegit:
+                    'SerialPort1.Write("AT+CMGD=" & txtRead & Chr(13))
+
+                    'Esborrem els missatges rebuts i llegits:
+                    SerialPort1.Write("AT+CMGD=1" & Chr(13))
+                End While
+                ChangeConnectSign(1)
+                Thread.Sleep(TIME4THREAD)
             End While
+        Else
+            ClosePort(SerialPort1)
         End If
         threadSMSON = False
     End Sub
@@ -871,9 +955,10 @@ Public Class Form1
         Dim addresses As New ArrayList
         addresses = MailConfiguration.get_addresses
 
-        Dim bodyMail = smsTxt.Datahora & ", " & smsTxt.Name & ", " & smsTxt.Phone & ", Filtro " & _
-            smsTxt.Filter & " de " & smsTxt.NumFilters & ", " & smsTxt.Body
-        MailConfiguration.sendMail(addresses, bodyMail, smsTxt.Name, MailPriority.Normal)
+        'smsTxt.Name & vbCr & dataihora & vbCr & _
+        '"Filtro #" & smsTxt.Filter & "/" & smsTxt.Numfilters & vbCr & smsTxt.Body
+
+        MailConfiguration.sendMail(addresses, smsTxt.AllMessage, smsTxt.Name, MailPriority.Normal)
 
     End Sub
 
@@ -938,16 +1023,24 @@ Public Class Form1
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         'Abans de tancar el programa principal cal parar els threads.
+        tancant = True
         Dim i As Integer
         i = 0
 
         connectStablished = False
         freeSpace = False
-        ClosePort(SerialPort1)
-        ChangeConnectSign(-1)
         Cursor = System.Windows.Forms.Cursors.WaitCursor
-        While threadSMSON = True Or threadDiskSpace.IsAlive
+        While SerialPort1.IsOpen
             Thread.Sleep(2000)
+            i += 1
+            If i >= 5 Then
+                ClosePort(SerialPort1)
+                Exit While
+            End If
+        End While
+        ChangeConnectSign(-1)
+        i = 0
+        While threadSMSON = True Or threadDiskSpace.IsAlive
             i += 1
             If i >= 5 Then
                 If threadDiskSpace.IsAlive Then
@@ -955,8 +1048,9 @@ Public Class Form1
                 End If
                 Exit While
             End If
+            Thread.Sleep(2000)
         End While
-        Cursor = System.Windows.Forms.Cursors.Default
+        ' Cursor = System.Windows.Forms.Cursors.Default
 
     End Sub
 
@@ -1149,5 +1243,6 @@ Public Class SMSText
     Public Filter As Integer
     Public NumFilters As Integer
     Public Body As String
+    Public AllMessage As String
 
 End Class

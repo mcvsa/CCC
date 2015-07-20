@@ -49,11 +49,18 @@ Module SMSConfiguration
         If Form1.comprovaTelefon(phone) = -1 Then
             Return ("Telèfon incorrecte")
         Else
+            Dim resp As String = ""
             Try
-                serialport.Write("AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
-                Thread.Sleep(SLEEPING_TIME)
-                serialport.Write(message & vbCrLf & Chr(26))
-                Thread.Sleep(SLEEPING_TIME)
+                If serialport.IsOpen Then
+                    serialport.Write("AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
+                    Thread.Sleep(SLEEPING_TIME)
+                    serialport.Write(message & vbCrLf & Chr(26))
+                    Thread.Sleep(SLEEPING_TIME)
+                    resp = ""
+                End If
+                While (resp.IndexOf("OK") < 0 And serialport.BytesToRead > 0)
+                    resp = serialport.ReadExisting
+                End While
             Catch ex As Exception
                 Return ex.Message
             End Try
