@@ -23,7 +23,7 @@ Public Class Form1
     Const TIME4SPACE As Integer = 5000 'Cada quant de temps mirem l'espai disponible de disc.
     Const LOWHDD As Long = 314572800 '300 Megues: avís de poc espai al disc dur.
     Const NUMMAXOFSMS As Integer = 30 'Número màxim de missatges al panell de darrers avisos.
-    Const MAXLOGENTRIES As Integer = 100 'Número màxim de línies al log.
+    Const MAXLOGENTRIES As Integer = 1000 'Número màxim de línies al log.
     Const NUM_COLS As Integer = 5 'Número de columnes del DataGridView.
     Const TIME2SMS As Integer = 5000 'Temps d'espera per a donar temps al mòdem a processar el SMS anterior
 
@@ -647,7 +647,6 @@ Public Class Form1
             'System.IO.File.Create(LOG)
             IOTextFiles.createFile(LOG)
         End If
-
         My.Computer.FileSystem.WriteAllText(LOG, message & vbCrLf, True)
 
     End Sub
@@ -682,75 +681,74 @@ Public Class Form1
             Try
                 If SerialPort1.IsOpen Then
                     SerialPort1.Write("ATZ" & Chr(13))
-                    response = SerialPort1.ReadExisting
+                    response = SerialPort1.ReadLine
+
                     While (response.IndexOf("0") < 0 And response.IndexOf("OK") < 0)
-                        response += SerialPort1.ReadExisting
+                        response += SerialPort1.ReadLine
                     End While
                     response = ""
                 End If
             Catch ex As Exception
                 MsgBox(ex.Message, vbCritical)
                 RoundLog("SMSWorker: response ATZ error-" & ex.Message)
+                RoundLog("ATZ: " & response)
                 connectStablished = False
                 ChangeConnectSign(-1)
             End Try
             'Forcem mode 'detalls' al mòdem (que no mostri números, sino 'OK' i detalls)
             Try
                 If SerialPort1.IsOpen Then
-                    'SerialPort1.Write("ATZ" & Chr(13))
                     SerialPort1.Write("ATV1" & Chr(13))
+                    response = SerialPort1.ReadLine
 
-                    response = SerialPort1.ReadExisting
                     While (response.IndexOf("OK") < 0 And SerialPort1.BytesToRead > 0)
-                        response += SerialPort1.ReadExisting
+                        response += SerialPort1.ReadLine
                     End While
                     response = ""
                 End If
             Catch ex As Exception
                 MsgBox(ex.Message, vbCritical)
                 RoundLog("SMSWorker: response ATV1 error-" & ex.Message)
+                RoundLog("ATV: " & response)
                 connectStablished = False
                 ChangeConnectSign(-1)
             End Try
             'Forcem mode text al mòdem
-            Try
-                If SerialPort1.IsOpen Then
-                    SerialPort1.Write("AT+CMGF=1" & Chr(13))
-                    response = SerialPort1.ReadExisting
-                    While (response.IndexOf("OK") < 0 And SerialPort1.BytesToRead > 0)
-                        response = SerialPort1.ReadExisting
-                    End While
-                End If
-            Catch ex As Exception
-                MsgBox(ex.Message, vbCritical)
-                RoundLog("SMSWorker: response AT+CMGF=1 error-" & ex.Message)
+            Dim result = SMSConfiguration.modeText(SerialPort1)
+            If result <> "OK" Then
+                MsgBox(result, vbCritical)
+                RoundLog("SMSWorker: response AT+CMGF=1 error-" & result)
                 connectStablished = False
                 ChangeConnectSign(-1)
-            End Try
-
+            End If
+            
             While connectStablished
                 returnstr = ""
                 response = ""
 
                 SerialPort1.DiscardInBuffer()
                 SerialPort1.DiscardOutBuffer()
-                '                Thread.Sleep(1000)
+                RoundLog("20")
+                'Thread.Sleep(1000)
                 Try
                     'Llegir els no llegits:
-                    SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                    'SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
 
                     'Llegir TOTS els SMS:
-                    'SerialPort1.Write("AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
-
-                    response = SerialPort1.ReadExisting
-
-                    ' And SerialPort1.BytesToRead > 0
+                    RoundLog("21")
+                    SerialPort1.Write("AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
+                    RoundLog("22")
+                    response = SerialPort1.ReadLine
+                    RoundLog("23")
                     While (response.IndexOf(finalChain) < 0)
+                        RoundLog("24")
                         response += SerialPort1.ReadLine
+                        RoundLog("24 - " & response)
                     End While
                 Catch ex As Exception
                     MsgBox(ex.Message, vbCritical)
                     RoundLog("SMSWorker, connection stablished, but error: " & ex.Message)
+                    RoundLog(response)
                     connectStablished = False
                     ChangeConnectSign(-1)
                     Exit While
@@ -859,7 +857,7 @@ Public Class Form1
                     txt.Body = returnstr.Substring(0, indexa)
                     txt.AllMessage = ashole
                     'Esborrem la part llegida
-                    returnstr = returnstr.Remove(0, indexa)
+                    'returnstr = returnstr.Remove(0, indexa)
                     'Apuntem les dades corresponents al captador que toqui
                     Dim indexCaptador As Integer
                     indexCaptador = comprovaTelefon(txt.Phone)
@@ -900,21 +898,29 @@ Public Class Form1
                                 If MailConfiguration.smsAlarm = "1" Then
                                     Dim phone As String = ""
                                     For Each phone In SMSConfiguration.getPhonesList
-                                        SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
-                                        Thread.Sleep(TIME2SMS)
+                                        Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
+                                        If resSMS <> "OK" Then
+                                            MsgBox(resSMS, vbOKOnly)
+                                        End If
+                                        'Thread.Sleep(TIME2SMS)
                                         'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
                                         Try
+                                            RoundLog("1")
                                             If connectStablished Then
+                                                RoundLog("2")
                                                 SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                                                response = ""
-
-                                                While (response.IndexOf(finalChain))
-                                                    response = SerialPort1.ReadLine.ToString
+                                                RoundLog("3")
+                                                response = SerialPort1.ReadLine
+                                                RoundLog("4")
+                                                RoundLog(response & "-21")
+                                                While (response.IndexOf(finalChain) < 0)
+                                                    response = SerialPort1.ReadLine
+                                                    RoundLog(response & "-20")
                                                 End While
                                                 returnstr += response
                                                 returnstr.Replace("\0D", vbCr)
                                                 'Esborra tots els missatges llegits
-                                                SerialPort1.Write("AT+CMGD=1" & Chr(13))
+                                                'SerialPort1.Write("AT+CMGD=1" & Chr(13))
                                             End If
                                         Catch ex As Exception
                                             MsgBox(ex.Message, vbCritical)
@@ -939,7 +945,7 @@ Public Class Form1
                     'SerialPort1.Write("AT+CMGD=" & txtRead & Chr(13))
 
                     'Esborrem els missatges rebuts i llegits:
-                    SerialPort1.Write("AT+CMGD=1" & Chr(13))
+                    'SerialPort1.Write("AT+CMGD=1" & Chr(13))
                 End While
                 ChangeConnectSign(1)
                 Thread.Sleep(TIME4THREAD)
