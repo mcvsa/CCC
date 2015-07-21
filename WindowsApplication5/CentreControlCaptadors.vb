@@ -19,7 +19,7 @@ Public Class Form1
     Public threadSMSON As Boolean = False
 
     Public Const VELOCIDADPUERTO As Integer = 9600 '115200, 9600
-    Const TIME4THREAD As Integer = 10000 'Cada quant de temps mirem els SMS rebuts: 1000
+    Const TIME4THREAD As Integer = 1000 'Cada quant de temps mirem els SMS rebuts: 1000
     Const TIME4SPACE As Integer = 5000 'Cada quant de temps mirem l'espai disponible de disc.
     Const LOWHDD As Long = 314572800 '300 Megues: avís de poc espai al disc dur.
     Const NUMMAXOFSMS As Integer = 30 'Número màxim de missatges al panell de darrers avisos.
