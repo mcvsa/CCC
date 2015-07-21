@@ -103,6 +103,8 @@ Module SMSConfiguration
             Dim response As String = ""
             Try
                 If finalChar = ">" Then
+                    'No podem fer servir el métode 'ReadLine' perquè el que envia el mòdem és AT... + vbCrLF + >
+                    'Suposo que el vbCrLf va que el 'ReadLine' pensi que ha acabat de rebre totes les dades.
                     response = serialport.ReadExisting
                     While (response.IndexOf(">") < 0)
                         response += serialport.ReadExisting
