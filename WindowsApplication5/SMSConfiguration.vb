@@ -48,16 +48,16 @@ Module SMSConfiguration
         Else
             Dim resp As String = ""
             sendToModem(serialport, "AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
-            
-            'Thread.Sleep(SLEEPING_TIME)
-            'While (resp.IndexOf(">") < 0)
-            'resp += serialport.ReadLine
-            'End While
+
+            resp = readFromModem(serialport, ">")
+            If resp = "ERROR" Then
+                Form1.RoundLog("& Error writing message body")
+            End If
             'Thread.Sleep(SLEEPING_TIME)
             sendToModem(serialport, message & vbCrLf & Chr(26))
             resp = readFromModem(serialport, "OK")
             If resp = "ERROR" Then
-                Form1.RoundLog("& Error sending SMS: " & resp)
+                Form1.RoundLog("& Error sending SMS")
                 Return resp
             End If
             Return "OK"
@@ -99,20 +99,30 @@ Module SMSConfiguration
 
     Public Function readFromModem(ByRef serialport As System.IO.Ports.SerialPort, ByVal finalChar As String)
         If serialport.IsOpen Then
+
             Dim response As String = ""
             Try
-                response = serialport.ReadLine
+                If finalChar = ">" Then
+                    response = serialport.ReadExisting
+                    While (response.IndexOf(">") < 0)
+                        response += serialport.ReadExisting
+                    End While
+                Else
+                    response = serialport.ReadLine
 
-                While (response.IndexOf(finalChar) < 0)
-                    response += serialport.ReadLine
-                End While
+                    While (response.IndexOf(finalChar) < 0)
+                        response += serialport.ReadLine
+                    End While
+                End If
             Catch ex As Exception
                 Form1.RoundLog("Error receiving " & finalChar & "-" & ex.Message)
                 Return "ERROR"
             End Try
             Return response
         End If
+
         Return "ERROR"
+
     End Function
 
 End Module
