@@ -181,8 +181,8 @@ Public Class ConfigAlerts
                 Form1.connectStablished = False
                 Form1.ClosePort(Form1.SerialPort1)
                 Form1.ChangeConnectSign(-1)
-                Cursor = System.Windows.Forms.Cursors.WaitCursor
                 While Form1.threadSMSON = True
+                    Cursor = System.Windows.Forms.Cursors.WaitCursor
                     Thread.Sleep(1000)
                     i += 1
                     If i >= 5 Then
@@ -190,15 +190,43 @@ Public Class ConfigAlerts
                         Exit While
                     End If
                 End While
-                Cursor = System.Windows.Forms.Cursors.Default
+                Form1.Cursor = System.Windows.Forms.Cursors.Default
             End If
         End If
 
         Dim serialportname As String = CBoxSerialPort.SelectedItem
-        If serialportname <> "" Then
-            SMSConfiguration.openPort(serialportname, SerialPortTest)
-        End If
+        Dim response As String = ""
 
+        If serialportname <> "" Then
+            response = SMSConfiguration.openPort(serialportname, SerialPortTest)
+            If response <> "OK" Then
+                Form1.RoundLog("& problem accessing serial port from Form2")
+                MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
+                CBoxSerialPort.SelectedItem = Nothing
+                BtTestSMS.Enabled = False
+                Exit Sub
+            End If
+        End If
+        'Forcem mode "detalls" al mòdem
+        SMSConfiguration.sendToModem(SerialPortTest, "ATV1")
+        response = SMSConfiguration.readFromModem(SerialPortTest, "OK")
+        If response = "ERROR" Then
+            Form1.RoundLog("& Error: " & "ATV1-TEST")
+            MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
+            CBoxSerialPort.SelectedItem = Nothing
+            BtTestSMS.Enabled = False
+            Exit Sub
+        End If
+        'Forcem mode text al mòdem
+        SMSConfiguration.sendToModem(SerialPortTest, "AT+CMGF=1")
+        response = SMSConfiguration.readFromModem(SerialPortTest, "OK")
+        If response = "ERROR" Then
+            Form1.RoundLog("& Error: " & "AT+CMGF=1-TEST")
+            MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
+            CBoxSerialPort.SelectedItem = Nothing
+            BtTestSMS.Enabled = False
+            Exit Sub
+        End If
         Dim phone = InputBox("Telèfon on voleu enviar el SMS? (9 dígits)", "Test SMS")
         If phone <> Nothing Then
             Dim ret = SMSConfiguration.sendSMS(phone, SerialPortTest, TEST_MESSAGE)
