@@ -19,7 +19,7 @@ Public Class Form1
     Public threadSMSON As Boolean = False
 
     Public Const VELOCIDADPUERTO As Integer = 9600 '115200, 9600
-    Const TIME4THREAD As Integer = 1000 'Cada quant de temps mirem els SMS rebuts.
+    Const TIME4THREAD As Integer = 10000 'Cada quant de temps mirem els SMS rebuts: 1000
     Const TIME4SPACE As Integer = 5000 'Cada quant de temps mirem l'espai disponible de disc.
     Const LOWHDD As Long = 314572800 '300 Megues: avís de poc espai al disc dur.
     Const NUMMAXOFSMS As Integer = 30 'Número màxim de missatges al panell de darrers avisos.
@@ -251,7 +251,7 @@ Public Class Form1
             Try
                 Me.Invoke(x)
             Catch ex As Exception
-                RoundLog(ex.ToString)
+                RoundLog(ex.Message)
             End Try
         Else
             vectorSMS.Sort()
@@ -677,82 +677,39 @@ Public Class Form1
             Dim finalChain As String = "OK" & vbCr & ""
             Dim texts As New List(Of SMSText)
 
-            'Ressetegem el mòdem
-            Try
-                If SerialPort1.IsOpen Then
-                    SerialPort1.Write("ATZ" & Chr(13))
-                    response = SerialPort1.ReadLine
-
-                    While (response.IndexOf("0") < 0 And response.IndexOf("OK") < 0)
-                        response += SerialPort1.ReadLine
-                    End While
-                    response = ""
-                End If
-            Catch ex As Exception
-                MsgBox(ex.Message, vbCritical)
-                RoundLog("SMSWorker: response ATZ error-" & ex.Message)
-                RoundLog("ATZ: " & response)
-                connectStablished = False
-                ChangeConnectSign(-1)
-            End Try
             'Forcem mode 'detalls' al mòdem (que no mostri números, sino 'OK' i detalls)
-            Try
-                If SerialPort1.IsOpen Then
-                    SerialPort1.Write("ATV1" & Chr(13))
-                    response = SerialPort1.ReadLine
-
-                    While (response.IndexOf("OK") < 0 And SerialPort1.BytesToRead > 0)
-                        response += SerialPort1.ReadLine
-                    End While
-                    response = ""
-                End If
-            Catch ex As Exception
-                MsgBox(ex.Message, vbCritical)
-                RoundLog("SMSWorker: response ATV1 error-" & ex.Message)
-                RoundLog("ATV: " & response)
-                connectStablished = False
-                ChangeConnectSign(-1)
-            End Try
-            'Forcem mode text al mòdem
-            Dim result = SMSConfiguration.modeText(SerialPort1)
-            If result <> "OK" Then
-                MsgBox(result, vbCritical)
-                RoundLog("SMSWorker: response AT+CMGF=1 error-" & result)
+            SMSConfiguration.sendToModem(SerialPort1, "ATV1")
+            response = SMSConfiguration.readFromModem(SerialPort1, "OK")
+            If response = "ERROR" Then
+                RoundLog("& Error: " & "ATV1")
                 connectStablished = False
                 ChangeConnectSign(-1)
             End If
-            
+
+            'Forcem mode text al mòdem
+            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGF=1")
+            response = SMSConfiguration.readFromModem(SerialPort1, "OK")
+            If response = "ERROR" Then
+                RoundLog("& Error: " & "AT+CMGF=1")
+                connectStablished = False
+                ChangeConnectSign(-1)
+            End If
+
             While connectStablished
                 returnstr = ""
                 response = ""
 
-                SerialPort1.DiscardInBuffer()
-                SerialPort1.DiscardOutBuffer()
-                RoundLog("20")
-                'Thread.Sleep(1000)
-                Try
-                    'Llegir els no llegits:
-                    'SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-
-                    'Llegir TOTS els SMS:
-                    RoundLog("21")
-                    SerialPort1.Write("AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
-                    RoundLog("22")
-                    response = SerialPort1.ReadLine
-                    RoundLog("23")
-                    While (response.IndexOf(finalChain) < 0)
-                        RoundLog("24")
-                        response += SerialPort1.ReadLine
-                        RoundLog("24 - " & response)
-                    End While
-                Catch ex As Exception
-                    MsgBox(ex.Message, vbCritical)
-                    RoundLog("SMSWorker, connection stablished, but error: " & ex.Message)
-                    RoundLog(response)
+                'Debug:
+                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
+                'End Debug
+                response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
+                If response = "ERROR" Then
+                    RoundLog("& Error: " & "AT+CMGL")
                     connectStablished = False
                     ChangeConnectSign(-1)
-                    Exit While
-                End Try
+                End If
+
                 returnstr = response
                 'Preparem la resposta per a no tenir problemes amb '\0D' o vbCr
                 returnstr.Replace("\0D", vbCr)
@@ -856,8 +813,6 @@ Public Class Form1
                     End If
                     txt.Body = returnstr.Substring(0, indexa)
                     txt.AllMessage = ashole
-                    'Esborrem la part llegida
-                    'returnstr = returnstr.Remove(0, indexa)
                     'Apuntem les dades corresponents al captador que toqui
                     Dim indexCaptador As Integer
                     indexCaptador = comprovaTelefon(txt.Phone)
@@ -883,7 +838,6 @@ Public Class Form1
                                     MostraHistorial(captadors(indexCaptador).Nom)
                                 End If
                             End If
-
                             'Actualitzem el panell dels darrers missatges i la resta de dades per pantalla
                             '...sempre que el captador estigui actiu
                             If captadors(indexCaptador).Actiu Then
@@ -901,35 +855,25 @@ Public Class Form1
                                         Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
                                         If resSMS <> "OK" Then
                                             MsgBox(resSMS, vbOKOnly)
+                                            RoundLog("& Error sending SMS")
                                         End If
                                         'Thread.Sleep(TIME2SMS)
                                         'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
-                                        Try
-                                            RoundLog("1")
-                                            If connectStablished Then
-                                                RoundLog("2")
-                                                SerialPort1.Write("AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                                                RoundLog("3")
-                                                response = SerialPort1.ReadLine
-                                                RoundLog("4")
-                                                RoundLog(response & "-21")
-                                                While (response.IndexOf(finalChain) < 0)
-                                                    response = SerialPort1.ReadLine
-                                                    RoundLog(response & "-20")
-                                                End While
-                                                returnstr += response
-                                                returnstr.Replace("\0D", vbCr)
-                                                'Esborra tots els missatges llegits
-                                                'SerialPort1.Write("AT+CMGD=1" & Chr(13))
+                                        If connectStablished Then
+                                            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                                            response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
+                                            If response = "ERROR" Then
+                                                RoundLog("& Error: " & "AT+CMGL 2nd time")
+                                                connectStablished = False
+                                                ChangeConnectSign(-1)
                                             End If
-                                        Catch ex As Exception
-                                            MsgBox(ex.Message, vbCritical)
-                                            RoundLog("SMSWorker, error reading after sending message: " & ex.Message)
-                                            connectStablished = False
-                                            ChangeConnectSign(-1)
-                                            threadSMSON = False
-                                            Exit Sub
-                                        End Try
+                                            returnstr += response
+                                            returnstr.Replace("\0D", vbCr)
+                                            'Debug:
+                                            'Esborra tots els missatges llegits
+                                            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                                            'End Debug
+                                        End If
                                     Next
                                 End If
                             End If
@@ -944,25 +888,25 @@ Public Class Form1
                     'Esborrem el missatge llegit:
                     'SerialPort1.Write("AT+CMGD=" & txtRead & Chr(13))
 
+                    'Debug:
                     'Esborrem els missatges rebuts i llegits:
-                    'SerialPort1.Write("AT+CMGD=1" & Chr(13))
+                    SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                    'End Debug
+
                 End While
                 ChangeConnectSign(1)
                 Thread.Sleep(TIME4THREAD)
             End While
-        Else
-            ClosePort(SerialPort1)
-        End If
-        threadSMSON = False
+            Else
+                ClosePort(SerialPort1)
+            End If
+            threadSMSON = False
     End Sub
 
     Public Sub MailerDaemonWorker(ByVal smsTxt As Object)
 
         Dim addresses As New ArrayList
         addresses = MailConfiguration.get_addresses
-
-        'smsTxt.Name & vbCr & dataihora & vbCr & _
-        '"Filtro #" & smsTxt.Filter & "/" & smsTxt.Numfilters & vbCr & smsTxt.Body
 
         MailConfiguration.sendMail(addresses, smsTxt.AllMessage, smsTxt.Name, MailPriority.Normal)
 

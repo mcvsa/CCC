@@ -22,65 +22,44 @@ Module SMSConfiguration
                 .WriteTimeout = 500
                 .Encoding = System.Text.Encoding.Default
                 .ReadTimeout = 7000
+                .RtsEnable = False
                 .Open()
             End With
+
+            'Reset mòdem
+            sendToModem(serialPort, "ATZ")
+            Dim resp = readFromModem(serialPort, "OK")
+
+            If resp <> "ERROR" Then
+                Thread.Sleep(SLEEPING_TIME)
+                Return "OK"
+            End If
+            Return "& ERROR with ATZ command"
         Catch ex As Exception
             Return (ex.Message)
         End Try
-        Return ("OK")
-    End Function
 
-    Function modeText(ByRef serialPort As System.IO.Ports.SerialPort)
-        Dim response As String = ""
-        Try
-            Form1.RoundLog("30")
-            serialPort.Write("AT+CMGF=1" & Chr(13))
-            Form1.RoundLog("31")
-            While (response <> "OK" & vbCr & "")
-                Form1.RoundLog("32")
-                response = serialPort.ReadLine
-                Form1.RoundLog("Response = " & response)
-            End While
-        Catch ex As Exception
-            Return ex.Message
-            Form1.RoundLog(response)
-        End Try
-        Return ("OK")
     End Function
 
     Function sendSMS(ByVal phone As String, ByRef serialport As System.IO.Ports.SerialPort, ByRef message As String)
         phone = phone.Replace(".", "")
-        Form1.RoundLog("10")
-        serialport.DiscardInBuffer()
-        serialport.DiscardOutBuffer()
-        Form1.RoundLog("11")
         If Form1.comprovaTelefon(phone) = -1 Then
             Return ("Telèfon incorrecte")
         Else
-            Form1.RoundLog("12")
             Dim resp As String = ""
-            Try
-                Form1.RoundLog("13")
-                serialport.Write("AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
-                Form1.RoundLog("14")
-                Thread.Sleep(SLEEPING_TIME)
-                'While (resp.IndexOf(">") < 0)
-                'resp += serialport.ReadLine
-                'End While
-                'Thread.Sleep(SLEEPING_TIME)
-                serialport.Write(message & vbCrLf & Chr(26))
-                resp = ""
-                While (resp.IndexOf("OK") < 0)
-                    resp += serialport.ReadLine
-                    Form1.RoundLog(resp & "-10")
-                End While
-            Catch ex As Exception
-                Form1.RoundLog(resp)
-                Return ex.Message
-            End Try
-            serialport.DiscardInBuffer()
-            serialport.DiscardOutBuffer()
-
+            sendToModem(serialport, "AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
+            
+            'Thread.Sleep(SLEEPING_TIME)
+            'While (resp.IndexOf(">") < 0)
+            'resp += serialport.ReadLine
+            'End While
+            'Thread.Sleep(SLEEPING_TIME)
+            sendToModem(serialport, message & vbCrLf & Chr(26))
+            resp = readFromModem(serialport, "OK")
+            If resp = "ERROR" Then
+                Form1.RoundLog("& Error sending SMS: " & resp)
+                Return resp
+            End If
             Return "OK"
         End If
 
@@ -102,6 +81,38 @@ Module SMSConfiguration
         fileReader.Close()
         Return phones
 
+    End Function
+
+    Public Sub sendToModem(ByRef serialport As System.IO.Ports.SerialPort, ByVal dataToSend As String)
+        If serialport.IsOpen Then
+            Try
+                'serialport.DiscardOutBuffer()
+                serialport.Write(dataToSend & Chr(13))
+                'serialport.DiscardOutBuffer()
+            Catch ex As Exception
+                Form1.RoundLog("Error sending: " & dataToSend & "-" & ex.Message)
+                MsgBox(ex.Message, vbCritical)
+            End Try
+        End If
+
+    End Sub
+
+    Public Function readFromModem(ByRef serialport As System.IO.Ports.SerialPort, ByVal finalChar As String)
+        If serialport.IsOpen Then
+            Dim response As String = ""
+            Try
+                response = serialport.ReadLine
+
+                While (response.IndexOf(finalChar) < 0)
+                    response += serialport.ReadLine
+                End While
+            Catch ex As Exception
+                Form1.RoundLog("Error receiving " & finalChar & "-" & ex.Message)
+                Return "ERROR"
+            End Try
+            Return response
+        End If
+        Return "ERROR"
     End Function
 
 End Module
