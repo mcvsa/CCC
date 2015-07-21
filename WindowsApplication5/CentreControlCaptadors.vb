@@ -700,8 +700,8 @@ Public Class Form1
                 response = ""
 
                 'Debug:
-                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
+                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
                 'End Debug
                 response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
                 If response = "ERROR" Then
@@ -871,7 +871,7 @@ Public Class Form1
                                             returnstr.Replace("\0D", vbCr)
                                             'Debug:
                                             'Esborra tots els missatges llegits
-                                            'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                                            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
                                             'End Debug
                                         End If
                                     Next
@@ -890,7 +890,7 @@ Public Class Form1
 
                     'Debug:
                     'Esborrem els missatges rebuts i llegits:
-                    'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                    SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
                     'End Debug
 
                 End While

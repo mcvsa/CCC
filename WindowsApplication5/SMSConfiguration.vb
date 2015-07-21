@@ -110,6 +110,7 @@ Module SMSConfiguration
                         response += serialport.ReadExisting
                     End While
                 Else
+                    'El métode ReadExisting dóna problemes i 'timeouts'
                     response = serialport.ReadLine
 
                     While (response.IndexOf(finalChar) < 0)
