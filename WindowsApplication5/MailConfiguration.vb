@@ -2,10 +2,10 @@
 
 Module MailConfiguration
 
-    Public ReadOnly SMTP As String = "smtp.gmail.com"
-    Public ReadOnly SSL As String = "ON"
-    Public ReadOnly PORT As String = "587"
-    Public ReadOnly LOGIN As String = "centrecontrolcaptadors@gmail.com"
+    Public ReadOnly SMTP As String = "192.168.5.74"
+    Public ReadOnly SSL As String = "OFF"
+    Public ReadOnly PORT As String = "25"
+    Public ReadOnly LOGIN As String = "centrecontrolcaptadors@portdebarcelona.cat"
     Public ReadOnly PASSWORD As String = "CCCmcvsa"
 
     Public ReadOnly DEFAULTMAILALARM As String = "0"
