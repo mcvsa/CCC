@@ -30,7 +30,7 @@ Public Class ConfigAlerts
     Private Sub BtConfigMail_Click(sender As Object, e As EventArgs) Handles BtConfigMail.Click
         'Mostra a la pantalla la configuració actual del mail i obre el form de configuració del mail.
 
-        MailConfiguration.ReadConfigMail()
+        MailConfiguration.SetMailConfig()
 
         FormConfigMail.TBoxSMTPServer.Text = MailConfiguration.SmtpConfig
         If MailConfiguration.SslConfig = "ON" Then
@@ -90,12 +90,8 @@ Public Class ConfigAlerts
         'Load Form. Carreguem les dades al form.
 
         'Carreguem la configuració d'alertes
-        If Not My.Computer.FileSystem.FileExists(MailConfiguration.ALARM_CONFIGS) Then
-            IOTextFiles.createFile(MailConfiguration.ALARM_CONFIGS)
-            MailConfiguration.loadDefaultAlarmConfigs()
-        Else
-            MailConfiguration.getAlarmConfigs()
-        End If
+        MailConfiguration.getAlarmConfigs()
+
         If MailConfiguration.mailAlarm = "0" Then
             CBoxMail.Checked = False
         Else

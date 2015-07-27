@@ -32,7 +32,6 @@ Partial Class FormConfigMail
         Me.TBoxPort = New System.Windows.Forms.TextBox()
         Me.LbPort = New System.Windows.Forms.Label()
         Me.CBoxSSL = New System.Windows.Forms.CheckBox()
-        Me.BtDefaults = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'TBoxSMTPServer
@@ -58,11 +57,11 @@ Partial Class FormConfigMail
         '
         'BtConfigMailNow
         '
-        Me.BtConfigMailNow.Location = New System.Drawing.Point(182, 143)
+        Me.BtConfigMailNow.Location = New System.Drawing.Point(180, 143)
         Me.BtConfigMailNow.Name = "BtConfigMailNow"
         Me.BtConfigMailNow.Size = New System.Drawing.Size(130, 30)
         Me.BtConfigMailNow.TabIndex = 20
-        Me.BtConfigMailNow.Text = "Configurar"
+        Me.BtConfigMailNow.Text = "Acceptar"
         Me.BtConfigMailNow.UseVisualStyleBackColor = True
         '
         'LbSMTPMail
@@ -119,21 +118,11 @@ Partial Class FormConfigMail
         Me.CBoxSSL.Text = "SSL activat"
         Me.CBoxSSL.UseVisualStyleBackColor = True
         '
-        'BtDefaults
-        '
-        Me.BtDefaults.Location = New System.Drawing.Point(32, 143)
-        Me.BtDefaults.Name = "BtDefaults"
-        Me.BtDefaults.Size = New System.Drawing.Size(130, 30)
-        Me.BtDefaults.TabIndex = 27
-        Me.BtDefaults.Text = "Valors per defecte"
-        Me.BtDefaults.UseVisualStyleBackColor = True
-        '
         'FormConfigMail
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(322, 185)
-        Me.Controls.Add(Me.BtDefaults)
         Me.Controls.Add(Me.CBoxSSL)
         Me.Controls.Add(Me.LbPort)
         Me.Controls.Add(Me.TBoxPort)
@@ -165,5 +154,4 @@ Partial Class FormConfigMail
     Friend WithEvents TBoxPort As System.Windows.Forms.TextBox
     Friend WithEvents LbPort As System.Windows.Forms.Label
     Friend WithEvents CBoxSSL As System.Windows.Forms.CheckBox
-    Friend WithEvents BtDefaults As System.Windows.Forms.Button
 End Class

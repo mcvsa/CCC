@@ -2,18 +2,6 @@
 
 Module MailConfiguration
 
-    Public ReadOnly SMTP As String = "192.168.5.74"
-    Public ReadOnly SSL As String = "OFF"
-    Public ReadOnly PORT As String = "25"
-    Public ReadOnly LOGIN As String = "centrecontrolcaptadors@portdebarcelona.cat"
-    Public ReadOnly PASSWORD As String = "CCCmcvsa"
-
-    Public ReadOnly DEFAULTMAILALARM As String = "0"
-    Public ReadOnly DEFAULTSMSALARM As String = "0"
-    Public ReadOnly DEFAULTCONFIGS As String = "MAIL=" & DEFAULTMAILALARM & vbCrLf & "SMS=" & DEFAULTSMSALARM
-
-    Public ReadOnly MAIL_CONFIG As String = Form1.STARTUP_PATH & "\resources\mail.conf"
-    Public ReadOnly ALARM_CONFIGS As String = Form1.STARTUP_PATH & "\resources\settings.conf"
     Public ReadOnly FILE_MAILS As String = Form1.STARTUP_PATH & "\resources\mail.list"
 
     Public SmtpConfig As String
@@ -25,65 +13,25 @@ Module MailConfiguration
     Public mailAlarm As Integer
     Public smsAlarm As Integer
 
-    Sub ReadConfigMail()
-        'Reads mail configuration. I it is wrong or it doesn't exists, sets the default configuration
+    Sub SetMailConfig()
+        'Reads mail configuration. If it is wrong or it doesn't exists: Warning, sets the default configuration
 
-        If My.Computer.FileSystem.FileExists(MAIL_CONFIG) Then
-            Dim fileReader As System.IO.StreamReader
-            fileReader = My.Computer.FileSystem.OpenTextFileReader(MAIL_CONFIG)
-            Dim stringReader As New List(Of String)
-            While Not fileReader.EndOfStream
-                stringReader.Add(fileReader.ReadLine().Trim)
-            End While
-            fileReader.Close()
-
-            If stringReader.Count <> 5 Then
-                Form1.RoundLog("Error llegint dades configuració mail")
-                ConfigDefaults()
-            Else
-                If stringReader(1) <> "ON" And stringReader(1) <> "OFF" Then
-                    Form1.RoundLog("Error llegint dades configuració mail (ON/OFF)")
-                    ConfigDefaults()
-                Else
-                    SetConfigMail(stringReader)
-                End If
-            End If
-        Else
-            ConfigDefaults()
-        End If
+        SmtpConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSMTP)
+        SslConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSSL)
+        PortConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPORT)
+        LoginConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYLOGIN)
+        PasswdConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPASSWORD)
 
     End Sub
 
-    Sub ConfigDefaults()
+    Sub saveMailConfig(ByVal SMTPServer, ByVal SSLServer, ByVal portServer, ByVal loginServer, ByVal passwdServer)
+        'Guarda les dades de configuració del servidor
 
-        loadDefaultAlarmConfigs()
-
-        Dim stringReader As New List(Of String)
-        FormConfigMail.Defaults()
-        Dim fileReader = My.Computer.FileSystem.OpenTextFileReader(MAIL_CONFIG)
-        stringReader.Clear()
-        While Not fileReader.EndOfStream
-            stringReader.Add(fileReader.ReadLine().Trim)
-        End While
-        fileReader.Close()
-
-        SetConfigMail(stringReader)
-
-    End Sub
-
-    Sub SetConfigMail(ByRef stringConfs)
-        'Sets mail configuration in the variables
-
-        SmtpConfig = stringConfs(0)
-        SslConfig = stringConfs(1)
-        PortConfig = stringConfs(2)
-        LoginConfig = stringConfs(3)
-        PasswdConfig = stringConfs(4)
-    End Sub
-
-    Sub loadDefaultAlarmConfigs()
-        'Default configuration: won't send mails or SMS
-        IOTextFiles.writeFile(ALARM_CONFIGS, DEFAULTCONFIGS)
+        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSMTP, SMTPServer)
+        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSSL, SSLServer)
+        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPORT, portServer)
+        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYLOGIN, loginServer)
+        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPASSWORD, passwdServer)
 
     End Sub
 
@@ -104,8 +52,8 @@ Module MailConfiguration
             strSMS = "0"
         End If
 
-        Dim text2write As String = "MAIL=" & strMail & vbCrLf & "SMS=" & strSMS
-        IOTextFiles.writeFile(ALARM_CONFIGS, text2write)
+        SaveSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYSMSALARM, strSMS)
+        SaveSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYMAILALARM, strMail)
 
     End Sub
 
@@ -114,7 +62,7 @@ Module MailConfiguration
         Dim message As New MailMessage
         Dim smtp As New SmtpClient
         Dim receiver As String
-        ReadConfigMail()
+        SetMailConfig()
 
         message.From = New MailAddress(LoginConfig)
         Try
@@ -149,24 +97,19 @@ Module MailConfiguration
     End Function
 
     Public Sub getAlarmConfigs()
-        If Not My.Computer.FileSystem.FileExists(ALARM_CONFIGS) Then
-            loadDefaultAlarmConfigs()
-            mailAlarm = "0"
-            smsAlarm = "0"
-        Else
-            Dim stReader = My.Computer.FileSystem.OpenTextFileReader(ALARM_CONFIGS)
 
-            While Not stReader.EndOfStream
-                Dim linea = stReader.ReadLine
-                If linea.IndexOf("MAIL=") <> -1 Then
-                    mailAlarm = linea.Substring(linea.IndexOf("=") + 1)
-                ElseIf linea.IndexOf("SMS=") <> -1 Then
-                    smsAlarm = linea.Substring(linea.IndexOf("=") + 1)
-                End If
-            End While
-            stReader.Close()
+        Dim smsAlarmConfig = GetSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYSMSALARM)
+        Dim mailAlarmConfig = GetSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYMAILALARM)
 
+        If smsAlarmConfig = "" Then
+            smsAlarmConfig = "0"
         End If
+        If mailAlarmConfig = "" Then
+            mailAlarmConfig = "0"
+        End If
+
+        mailAlarm = CInt(mailAlarmConfig)
+        smsAlarm = CInt(smsAlarmConfig)
 
     End Sub
 

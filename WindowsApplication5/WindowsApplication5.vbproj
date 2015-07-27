@@ -112,6 +112,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="MailConfiguration.vb" />
+    <Compile Include="Settings.vb" />
     <Compile Include="SMSConfiguration.vb" />
   </ItemGroup>
   <ItemGroup>
