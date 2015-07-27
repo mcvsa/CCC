@@ -2,7 +2,7 @@
 
 Module SMSConfiguration
     Public ReadOnly SLEEPING_TIME As Integer = 1000 'Per a donar temps al mòdem a respondre
-    Public ReadOnly FILE_SMS As String = Form1.STARTUP_PATH & "\resources\sms.list"
+    Public ReadOnly FILE_SMS As String = CCC.STARTUP_PATH & "\resources\sms.list"
 
     Function openPort(ByVal serialPortName As String, ByRef serialPort As System.IO.Ports.SerialPort)
         Try
@@ -11,7 +11,7 @@ Module SMSConfiguration
                     serialPort.Close()
                 End If
                 .PortName = serialPortName
-                .BaudRate = Form1.VELOCIDADPUERTO
+                .BaudRate = CCC.VELOCIDADPUERTO
                 .DataBits = 8
                 .DtrEnable = False
                 .StopBits = IO.Ports.StopBits.One
@@ -43,7 +43,7 @@ Module SMSConfiguration
 
     Function sendSMS(ByVal phone As String, ByRef serialport As System.IO.Ports.SerialPort, ByRef message As String)
         phone = phone.Replace(".", "")
-        If Form1.comprovaTelefon(phone) = -1 Then
+        If CCC.comprovaTelefon(phone) = -1 Then
             Return ("Telèfon incorrecte")
         Else
             Dim resp As String = ""
@@ -51,13 +51,13 @@ Module SMSConfiguration
 
             resp = readFromModem(serialport, ">")
             If resp = "ERROR" Then
-                Form1.RoundLog("& Error writing message body")
+                CCC.RoundLog("& Error writing message body")
             End If
             'Thread.Sleep(SLEEPING_TIME)
             sendToModem(serialport, message & vbCrLf & Chr(26))
             resp = readFromModem(serialport, "OK")
             If resp = "ERROR" Then
-                Form1.RoundLog("& Error sending SMS")
+                CCC.RoundLog("& Error sending SMS")
                 Return resp
             End If
             Return "OK"
@@ -90,7 +90,7 @@ Module SMSConfiguration
                 serialport.Write(dataToSend & Chr(13))
                 'serialport.DiscardOutBuffer()
             Catch ex As Exception
-                Form1.RoundLog("Error sending: " & dataToSend & "-" & ex.Message)
+                CCC.RoundLog("Error sending: " & dataToSend & "-" & ex.Message)
                 MsgBox(ex.Message, vbCritical)
             End Try
         End If
@@ -121,7 +121,7 @@ Module SMSConfiguration
                     End While
                 End If
             Catch ex As Exception
-                Form1.RoundLog("Error receiving " & finalChar & "-" & ex.Message)
+                CCC.RoundLog("Error receiving " & finalChar & "-" & ex.Message)
                 Return "ERROR"
             End Try
             Return response

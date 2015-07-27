@@ -168,25 +168,25 @@ Public Class ConfigAlerts
 
     Private Sub BtTestSMS_Click(sender As Object, e As EventArgs) Handles BtTestSMS.Click
         'Test del SMS
-        If Form1.threadsmson Then
+        If CCC.threadsmson Then
             Dim res = MsgBox("Una vegada acabat el test haureu de restaurar la connexió manualment a la finestra principal. Voleu continuar?", vbYesNo)
             If res = vbNo Then
                 Exit Sub
             Else
                 Dim i As Integer = 0
-                Form1.connectStablished = False
-                Form1.ClosePort(Form1.SerialPort1)
-                Form1.ChangeConnectSign(-1)
-                While Form1.threadSMSON = True
+                CCC.connectStablished = False
+                CCC.ClosePort(CCC.SerialPort1)
+                CCC.ChangeConnectSign(-1)
+                While CCC.threadSMSON = True
                     Cursor = System.Windows.Forms.Cursors.WaitCursor
                     Thread.Sleep(1000)
                     i += 1
                     If i >= 5 Then
-                        Form1.RoundLog("ThreadSMS not dying!")
+                        CCC.RoundLog("ThreadSMS not dying!")
                         Exit While
                     End If
                 End While
-                Form1.Cursor = System.Windows.Forms.Cursors.Default
+                CCC.Cursor = System.Windows.Forms.Cursors.Default
             End If
         End If
 
@@ -196,7 +196,7 @@ Public Class ConfigAlerts
         If serialportname <> "" Then
             response = SMSConfiguration.openPort(serialportname, SerialPortTest)
             If response <> "OK" Then
-                Form1.RoundLog("& problem accessing serial port from Form2")
+                CCC.RoundLog("& problem accessing serial port from Form2")
                 MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
                 CBoxSerialPort.SelectedItem = Nothing
                 BtTestSMS.Enabled = False
@@ -207,7 +207,7 @@ Public Class ConfigAlerts
         SMSConfiguration.sendToModem(SerialPortTest, "ATV1")
         response = SMSConfiguration.readFromModem(SerialPortTest, "OK")
         If response = "ERROR" Then
-            Form1.RoundLog("& Error: " & "ATV1-TEST")
+            CCC.RoundLog("& Error: " & "ATV1-TEST")
             MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
             CBoxSerialPort.SelectedItem = Nothing
             BtTestSMS.Enabled = False
@@ -217,7 +217,7 @@ Public Class ConfigAlerts
         SMSConfiguration.sendToModem(SerialPortTest, "AT+CMGF=1")
         response = SMSConfiguration.readFromModem(SerialPortTest, "OK")
         If response = "ERROR" Then
-            Form1.RoundLog("& Error: " & "AT+CMGF=1-TEST")
+            CCC.RoundLog("& Error: " & "AT+CMGF=1-TEST")
             MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
             CBoxSerialPort.SelectedItem = Nothing
             BtTestSMS.Enabled = False
@@ -257,7 +257,7 @@ Public Class ConfigAlerts
         phone = InputBox("Nou destinatari de SMS", "Introduïu el telèfon del nou destinatari").Trim
 
         If phone <> "" Then
-            correcte = Form1.comprovaTelefon(phone)
+            correcte = CCC.comprovaTelefon(phone)
             If correcte <> -1 Then
                 For Each phoneRep In LBoxSMS.Items
                     If phone = phoneRep Then

@@ -2,7 +2,7 @@
 
 Module MailConfiguration
 
-    Public ReadOnly FILE_MAILS As String = Form1.STARTUP_PATH & "\resources\mail.list"
+    Public ReadOnly FILE_MAILS As String = CCC.STARTUP_PATH & "\resources\mail.list"
 
     Public SmtpConfig As String
     Public SslConfig As String
@@ -89,7 +89,7 @@ Module MailConfiguration
         Try
             smtp.Send(message)
         Catch ex As Exception
-            Form1.RoundLog("Error testing mail: " & ex.Message)
+            CCC.RoundLog("Error testing mail: " & ex.Message)
             Return ex.Message
         End Try
 

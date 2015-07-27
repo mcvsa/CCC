@@ -5,7 +5,7 @@ Imports System.Text
 Imports System.Threading
 Imports System.Net.Mail
 
-Public Class Form1
+Public Class CCC
     Dim captadors As New List(Of Captador)
     Public Shared connectStablished As Boolean = False
     Public Shared tancant As Boolean = False
@@ -172,7 +172,7 @@ Public Class Form1
         If Me.DataGridView.InvokeRequired Then
             Dim d As New UpdateDataGridViewCallback(AddressOf updateDataGridView)
             Me.Invoke(d, New Object() {[capta]})
-            
+
         Else
             If Not tancant Then
                 Dim crrntRow As Integer
@@ -897,10 +897,10 @@ Public Class Form1
                 ChangeConnectSign(1)
                 Thread.Sleep(TIME4THREAD)
             End While
-            Else
-                ClosePort(SerialPort1)
-            End If
-            threadSMSON = False
+        Else
+            ClosePort(SerialPort1)
+        End If
+        threadSMSON = False
     End Sub
 
     Public Sub MailerDaemonWorker(ByVal smsTxt As Object)
@@ -1113,10 +1113,10 @@ Public Class Captador
     Public Function FuncioDarrerMissatge()
         Dim linea As String
 
-        If My.Computer.FileSystem.FileExists(Form1.PATH_REGISTRES & Nom) Then
+        If My.Computer.FileSystem.FileExists(CCC.PATH_REGISTRES & Nom) Then
             linea = ""
             Dim stReader As System.IO.StreamReader
-            stReader = My.Computer.FileSystem.OpenTextFileReader(Form1.PATH_REGISTRES & Nom)
+            stReader = My.Computer.FileSystem.OpenTextFileReader(CCC.PATH_REGISTRES & Nom)
             While Not stReader.EndOfStream
                 linea = stReader.ReadLine
                 If linea <> "" Then
@@ -1158,9 +1158,9 @@ Public Class Captador
         'Crea el registre del captador.
         Dim rutaRegistre As String
 
-        If Not My.Computer.FileSystem.FileExists(Form1.PATH_REGISTRES & Nom) Then
+        If Not My.Computer.FileSystem.FileExists(CCC.PATH_REGISTRES & Nom) Then
 
-            rutaRegistre = Form1.PATH_REGISTRES & Nom
+            rutaRegistre = CCC.PATH_REGISTRES & Nom
 
             IOTextFiles.createFile(rutaRegistre)
         End If
@@ -1172,7 +1172,7 @@ Public Class Captador
 
         Dim file2write As String
 
-        file2write = Form1.PATH_REGISTRES & Nom
+        file2write = CCC.PATH_REGISTRES & Nom
 
         If Not My.Computer.FileSystem.FileExists(file2write) Then
             creaRegistreCaptador()
