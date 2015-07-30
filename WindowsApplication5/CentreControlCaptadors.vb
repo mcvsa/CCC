@@ -1122,6 +1122,7 @@ Public Class Captador
     Public Const FIN_CICLO As String = "CICLE FINALITZAT"
     Public Const TOT_OK As String = "OK"
     Public Const FIN_FILTRO As String = "OK FI DE FILTRE"
+    Public Const NO_MESSAGE As String = "-"
 
     'Classe captador: nom, telèfon associat i estat (actiu o no)
 
@@ -1168,6 +1169,8 @@ Public Class Captador
             LastState = FIN_CICLO
         ElseIf LastMessage.IndexOf("Filtro finaliz") >= 0 Then
             LastState = FIN_FILTRO
+        ElseIf LastMessage = "" Then
+            LastState = NO_MESSAGE
         Else
             LastState = TOT_OK
         End If
