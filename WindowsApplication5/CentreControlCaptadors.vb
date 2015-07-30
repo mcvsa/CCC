@@ -28,6 +28,7 @@ Public Class CCC
     Const TIME2SMS As Integer = 5000 'Temps d'espera per a donar temps al mòdem a processar el SMS anterior
 
     ReadOnly FITXER_BASE As String = Application.StartupPath & "\resources\captadors"
+    Public ReadOnly PORT_COM As String = Application.StartupPath & "\resources\configport"
     Public ReadOnly STARTUP_PATH = Application.StartupPath
     ReadOnly LOG As String = Application.StartupPath & "\resources\log.txt"
     ReadOnly LOG1 As String = Application.StartupPath & "\resources\log.txt.1"
@@ -117,12 +118,28 @@ Public Class CCC
         ChangeConnectSign(-1)
         ActivateOptions(False)
         UpdatePortsList()
-        BtSelectPort.Enabled = False
+
         If threadDiskSpace.IsAlive = True Then
             threadDiskSpace.Abort()
         End If
         threadDiskSpace.Start()
         DataGridView.ClearSelection()
+
+        If My.Computer.FileSystem.FileExists(PORT_COM) Then
+            Dim portreader = My.Computer.FileSystem.ReadAllText(PORT_COM)
+            Dim lastport = portreader.Trim
+            Dim item As String
+            Dim index As String = 0
+            If LBoxPorts.Items.Count > 0 Then
+                For Each item In LBoxPorts.Items
+                    If lastport = item Then
+                        LBoxPorts.SelectedIndex = index
+                        Connect2Port()
+                    End If
+                    index += 1
+                Next
+            End If
+        End If
 
     End Sub
 
@@ -414,6 +431,7 @@ Public Class CCC
             If res = "OK" Then
                 connectStablished = True
                 ChangeConnectSign(0)
+                IOTextFiles.writeFile(PORT_COM, port)
 
                 Dim threadSMS As New Thread(AddressOf SMSWorker)
                 If Not threadSMS.IsAlive Then
@@ -591,6 +609,10 @@ Public Class CCC
     End Sub
 
     Private Sub BtSelectPort_Click(sender As Object, e As EventArgs) Handles BtSelectPort.Click
+        Connect2Port()
+    End Sub
+
+    Sub Connect2Port()
         'Seleccionar port i connectar
         Dim port As String
         Dim connectat As String
