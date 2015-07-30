@@ -356,13 +356,13 @@ Public Class CCC
 
         Dim numTelefon As Long
 
-        If telefon.Length <> 9 Then
-            Return -1
-        End If
+        '        If telefon.Length <> 9 Then
+        'Return -1
+        'End If
 
-        If Not telefon.StartsWith("6") And Not telefon.StartsWith("7") And Not telefon.StartsWith("9") Then
-            Return -1
-        End If
+        'If Not telefon.StartsWith("6") And Not telefon.StartsWith("7") And Not telefon.StartsWith("9") Then
+        'Return -1
+        'End If
 
         Try
             numTelefon = CLng(telefon)
@@ -722,8 +722,8 @@ Public Class CCC
                 response = ""
 
                 'Debug:
-                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
+                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
                 'End Debug
                 response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
                 If response = "ERROR" Then
@@ -733,8 +733,9 @@ Public Class CCC
                 End If
 
                 returnstr = response
+
                 'Preparem la resposta per a no tenir problemes amb '\0D' o vbCr
-                returnstr.Replace("\0D", vbCr)
+                returnstr = returnstr.Replace("\0D", vbCr)
 
                 While returnstr.Length > 59 '59 serà el mínim número de caràcters si rebem un SMS
                     'Generem un nou element SMS
@@ -754,12 +755,23 @@ Public Class CCC
                     indexb = returnstr.IndexOf(",")
                     Dim txtRead As String
                     txtRead = returnstr.Substring(indexa, indexb - indexa)
-                    'Buscar +34
-                    indexa = returnstr.IndexOf("+34")
-                    'El número de telèfon serà indexa + 3 fins a indexa + 3 + 9
-                    txt.Phone = returnstr.Substring(indexa + 3, 9)
+                    'Busquem la cadena 'READ'
+                    indexa = returnstr.IndexOf("READ")
+                    'Eliminem fins a l'inici del número de telèfon (7 caràcters): READ","
+                    returnstr = returnstr.Remove(0, indexa + 7)
+                    'El final del número de telèfon és: ",
+                    indexb = returnstr.IndexOf(",") - 1
+                    'Si és un número que comença per '+34' haurem d'eliminar el '+34'
+                    indexa = returnstr.IndexOf("+")
+                    If indexa > 1 Then 'No hi ha +34
+                        indexa = 0
+                    Else 'Si hi ha +34 (o qualsevol altre codi de país)
+                        indexa = indexa + 3
+                    End If
+                    txt.Phone = returnstr.Substring(indexa, indexb - indexa)
+
                     'Eliminem part del missatge que ja no ens interessa
-                    returnstr = returnstr.Remove(0, indexa + 3 + 9)
+                    returnstr = returnstr.Remove(0, indexb)
                     'Busquem el nom del captador
                     'Mirem on comença el nom del captador
                     indexb = returnstr.IndexOf(vbCr)
@@ -893,7 +905,7 @@ Public Class CCC
                                             returnstr.Replace("\0D", vbCr)
                                             'Debug:
                                             'Esborra tots els missatges llegits
-                                            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                                            'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
                                             'End Debug
                                         End If
                                     Next
@@ -912,7 +924,7 @@ Public Class CCC
 
                     'Debug:
                     'Esborrem els missatges rebuts i llegits:
-                    SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                    'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
                     'End Debug
 
                 End While
