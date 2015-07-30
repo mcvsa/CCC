@@ -126,15 +126,18 @@ Public Class CCC
         DataGridView.ClearSelection()
 
         If My.Computer.FileSystem.FileExists(PORT_COM) Then
-            Dim portreader = My.Computer.FileSystem.ReadAllText(PORT_COM)
-            Dim lastport = portreader.Trim
-            Dim item As String
-            Dim index As String = 0
+            Dim portReader As System.IO.StreamReader
+            portReader = My.Computer.FileSystem.OpenTextFileReader(PORT_COM)
+            lastport = portReader.ReadLine.Trim
+            portReader.Close()
+            Dim item As Object
+            Dim index As Integer = 0
             If LBoxPorts.Items.Count > 0 Then
                 For Each item In LBoxPorts.Items
-                    If lastport = item Then
+                    If lastport = item.ToString Then
                         LBoxPorts.SelectedIndex = index
                         Connect2Port()
+                        Exit For
                     End If
                     index += 1
                 Next
