@@ -60,17 +60,13 @@ Public Class CCC
                         'Blank File, perhaps the end of the file
                         Continue While
                     Else
-                        'MsgBox("Fitxer de dades corrupte", vbCritical)
                         RoundLog("Fitxer de dades corrupte")
                     End If
                 ElseIf splitted(0).Trim() = "" Then
-                    'MsgBox("Nom de captador erroni a la base de dades", vbCritical)
                     RoundLog("Nom de captador erroni a la base de dades")
                 ElseIf comprovaTelefon(splitted(1).Trim()) > -2 Then
-                    'MsgBox("Telèfon erroni al captador '" & splitted(0) & "' Número: " & splitted(1), vbCritical)
                     RoundLog("Telèfon erroni al captador '" & splitted(0) & "' Número: " & splitted(1))
                 ElseIf splitted(2).Trim() <> "True" And splitted(2).Trim() <> "False" Then
-                    'MsgBox("Estat del captador '" & splitted(0) & "' incorrecte: " & splitted(2), vbCritical)
                     RoundLog("Estat del captador '" & splitted(0) & "' incorrecte: " & splitted(2))
                 Else
                     captador.Nom = splitted(0).Trim()
@@ -569,6 +565,7 @@ Public Class CCC
             If esborrar = 6 Then
                 captadors.RemoveAt(buscaCaptador(nom))
                 actualitzaCaptadors(FITXER_BASE, captadors)
+                TBoxHistoric.Text = ""
                 TBoxTelefon.Text = ""
             End If
         End If
@@ -741,6 +738,9 @@ Public Class CCC
 
                 'Preparem la resposta per a no tenir problemes amb '\0D' o vbCr
                 returnstr = returnstr.Replace("\0D", vbCr)
+                'Debug
+                'returnstr = returnstr.Replace("\0A", vbCr)
+                ' End Debug
 
                 While returnstr.Length > 59 '59 serà el mínim número de caràcters si rebem un SMS
                     'Generem un nou element SMS
@@ -801,7 +801,6 @@ Public Class CCC
                     indexa = returnstr.IndexOf(vbCr)
                     'El nom serà des del final del vbcrlf fins l'espai anterior al '\'
                     txt.Name = returnstr.Substring(indexb + 1, indexa - indexb - 1).Trim
-                    'Dim ashole = txt.Name + vbCr
                     'Eliminem part del missatge que ja no ens interessa
                     returnstr = returnstr.Remove(0, indexa + 1)
                     'Busquem data i hora d'enviament
@@ -809,7 +808,6 @@ Public Class CCC
                     Dim datahora As DateTime
                     Try
                         datahora = returnstr.Substring(0, indexa)
-                        'ashole += returnstr.Substring(0, indexa) + vbCr
                         txt.DataHora = datahora.ToString("u")
                     Catch ex As Exception
                         RoundLog("SMSWorker: SMS error-" & ex.Message)
@@ -893,7 +891,7 @@ Public Class CCC
                                     For Each phone In SMSConfiguration.getPhonesList
                                         Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
                                         If resSMS <> "OK" Then
-                                            MsgBox(resSMS, vbOKOnly)
+                                            'MsgBox(resSMS, vbOKOnly)
                                             RoundLog("& Error sending SMS")
                                         End If
                                         'Thread.Sleep(TIME2SMS)
@@ -903,8 +901,8 @@ Public Class CCC
                                             response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
                                             If response = "ERROR" Then
                                                 RoundLog("& Error: " & "AT+CMGL 2nd time")
-                                                connectStablished = False
-                                                ChangeConnectSign(-1)
+                                                'connectStablished = False
+                                                'ChangeConnectSign(-1)
                                             End If
                                             returnstr += response
                                             returnstr.Replace("\0D", vbCr)
@@ -925,16 +923,10 @@ Public Class CCC
                         RoundLog("Error amb el telèfon " & txt.Phone)
                     End If
 
+                    'Debug
                     'Esborrem el missatge llegit:
-                    'SerialPort1.Write("AT+CMGD=" & txtRead & Chr(13))
                     SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=" & txtRead & Chr(13))
                     response = SMSConfiguration.readFromModem(SerialPort1, "OK")
-
-                    'Debug:
-                    'Esborrem els missatges rebuts i llegits:
-                    'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
-                    'response = SMSConfiguration.readFromModem(SerialPort1, "OK")
-
                     'End Debug
 
                 End While
@@ -1243,3 +1235,4 @@ Public Class SMSText
     Public AllMessage As String
 
 End Class
+

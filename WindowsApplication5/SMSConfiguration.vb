@@ -56,8 +56,8 @@ Module SMSConfiguration
             Dim resp As String = ""
             CCC.RoundLog("Comencem a enviar SMS amb el text: " & message)
             sendToModem(serialport, "AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
-
             resp = readFromModem(serialport, ">")
+
             If resp = "ERROR" Then
                 CCC.RoundLog("& Error writing message body")
             End If
@@ -93,14 +93,14 @@ Module SMSConfiguration
 
     Public Sub sendToModem(ByRef serialport As System.IO.Ports.SerialPort, ByVal dataToSend As String)
         If serialport.IsOpen Then
-            CCC.RoundLog("Enviant al modem: " & dataToSend)
+            'CCC.RoundLog("Enviant al modem: " & dataToSend)
             Try
                 'serialport.DiscardOutBuffer()
                 serialport.Write(dataToSend & Chr(13))
                 'serialport.DiscardOutBuffer()
             Catch ex As Exception
                 CCC.RoundLog("Error sending: " & dataToSend & "-" & ex.Message)
-                MsgBox(ex.Message, vbCritical)
+                'MsgBox(ex.Message, vbCritical)
             End Try
         End If
 
@@ -108,7 +108,7 @@ Module SMSConfiguration
 
     Public Function readFromModem(ByRef serialport As System.IO.Ports.SerialPort, ByVal finalChar As String)
         'If serialport.IsOpen Then
-        CCC.RoundLog("Llegint del modem. FinalChar = " & finalChar)
+        'CCC.RoundLog("Llegint del modem. FinalChar = " & finalChar)
         Dim response As String = ""
         Try
             If finalChar = ">" Then
@@ -127,6 +127,7 @@ Module SMSConfiguration
 
                 While (response.IndexOf(finalChar) < 0)
                     response += serialport.ReadLine
+                    'CCC.RoundLog("Resposta = " + response)
                 End While
             End If
         Catch ex As Exception
