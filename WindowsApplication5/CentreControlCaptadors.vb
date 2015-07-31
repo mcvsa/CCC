@@ -414,7 +414,7 @@ Public Class CCC
 
     End Sub
 
-    Function OpenPort(ByRef port As String) As String
+    Function OpenningPort(ByRef port As String) As String
         'Funció per a connectar al mòdem série
         Dim cont As Integer = 0
         connectStablished = False
@@ -431,7 +431,9 @@ Public Class CCC
 
             Dim res = SMSConfiguration.openPort(port, SerialPort1)
 
-            If res = "OK" Then
+            Dim reset = SMSConfiguration.resetModem(SerialPort1)
+
+            If res = "OK" And reset = "OK" Then
                 connectStablished = True
                 ChangeConnectSign(0)
                 IOTextFiles.writeFile(PORT_COM, port)
@@ -441,14 +443,14 @@ Public Class CCC
                     threadSMS.Start()
                     threadSMSON = True
                 End If
-                OpenPort = vbOK
+                OpenningPort = vbOK
             Else
-                OpenPort = res
+                OpenningPort = "Obrint port: " & res & " - " & "Reset port: " & reset
                 connectStablished = False
                 Cursor = System.Windows.Forms.Cursors.Default
             End If
         Else
-            OpenPort = "Error desconnectant el port"
+            OpenningPort = "Error desconnectant el port"
             Close()
         End If
 
@@ -624,7 +626,7 @@ Public Class CCC
             port = LBoxPorts.SelectedItem.ToString
 
             If port <> "" Then
-                connectat = OpenPort(port)
+                connectat = OpenningPort(port)
 
                 If connectat = "1" Then
                     connectStablished = True
@@ -908,7 +910,8 @@ Public Class CCC
                                             returnstr.Replace("\0D", vbCr)
                                             'Debug:
                                             'Esborra tots els missatges llegits
-                                            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                                            'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                                            'response = SMSConfiguration.readFromModem(SerialPort1, "OK")
                                             'End Debug
                                         End If
                                     Next
@@ -924,10 +927,14 @@ Public Class CCC
 
                     'Esborrem el missatge llegit:
                     'SerialPort1.Write("AT+CMGD=" & txtRead & Chr(13))
+                    SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=" & txtRead & Chr(13))
+                    response = SMSConfiguration.readFromModem(SerialPort1, "OK")
 
                     'Debug:
                     'Esborrem els missatges rebuts i llegits:
-                    SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                    'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                    'response = SMSConfiguration.readFromModem(SerialPort1, "OK")
+
                     'End Debug
 
                 End While

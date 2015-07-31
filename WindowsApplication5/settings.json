@@ -1,0 +1,29 @@
+﻿{
+    "devices": [ ],
+
+    "distribution-lists": [
+        {
+            "mails-list": [],
+
+            "phones-list": []
+        }
+    ],
+
+    "sms-texts": [
+        {
+            "text":
+        },
+    ]
+    "configured-alarms": {
+        "mail-alarm":,
+        "phone-alarm":
+    }
+    "mail-server": {
+        "smtp":,
+        "ssl":,
+        "port":,
+        "login";,
+        "password":     }
+}
+
+     
