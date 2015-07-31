@@ -800,7 +800,7 @@ Public Class CCC
                     'Busquem el final del nom del captador
                     indexa = returnstr.IndexOf(vbCr)
                     'El nom serà des del final del vbcrlf fins l'espai anterior al '\'
-                    txt.Name = returnstr.Substring(indexb + 1, indexa - indexb - 1).Trim
+                    txt.Name = returnstr.Substring(indexb, indexa - indexb - 1).Trim
                     'Eliminem part del missatge que ja no ens interessa
                     returnstr = returnstr.Remove(0, indexa + 1)
                     'Busquem data i hora d'enviament
