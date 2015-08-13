@@ -4,9 +4,9 @@ Imports System.IO
 Imports System.Text
 Imports System.Threading
 Imports System.Net.Mail
+Imports Newtonsoft.Json
 
 Public Class CCC
-    Dim captadors As New List(Of Captador)
     Public Shared connectStablished As Boolean = False
     Public Shared tancant As Boolean = False
     Public Shared freeSpace As Boolean = True
@@ -17,9 +17,10 @@ Public Class CCC
     Delegate Sub UpdateDataGridViewCallback([capta] As Captador)
     Dim vectorSMS As New List(Of String)
     Public threadSMSON As Boolean = False
+    Public Shared json As New JsonFile
 
     Public Const VELOCIDADPUERTO As Integer = 9600 '115200, 9600
-    Const TIME4THREAD As Integer = 1000 'Cada quant de temps mirem els SMS rebuts: 1000
+    Const TIME4THREAD As Integer = 4000 'Cada quant de temps mirem els SMS rebuts: 1000
     Const TIME4SPACE As Integer = 5000 'Cada quant de temps mirem l'espai disponible de disc.
     Const LOWHDD As Long = 314572800 '300 Megues: avís de poc espai al disc dur.
     Const NUMMAXOFSMS As Integer = 30 'Número màxim de missatges al panell de darrers avisos.
@@ -27,8 +28,7 @@ Public Class CCC
     Const NUM_COLS As Integer = 5 'Número de columnes del DataGridView.
     Const TIME2SMS As Integer = 5000 'Temps d'espera per a donar temps al mòdem a processar el SMS anterior
 
-    ReadOnly FITXER_BASE As String = Application.StartupPath & "\resources\captadors"
-    Public ReadOnly PORT_COM As String = Application.StartupPath & "\resources\configport"
+    Public ReadOnly SETTINGSFILE As String = Application.StartupPath & "\resources\settings.json"
     Public ReadOnly STARTUP_PATH = Application.StartupPath
     ReadOnly LOG As String = Application.StartupPath & "\resources\log.txt"
     ReadOnly LOG1 As String = Application.StartupPath & "\resources\log.txt.1"
@@ -41,58 +41,15 @@ Public Class CCC
             My.Computer.FileSystem.CreateDirectory(PATH_REGISTRES)
         End If
 
-        If My.Computer.FileSystem.FileExists(FITXER_BASE) Then
+        JsonFile.updateJsonVar()
 
-            Dim fileReader As System.IO.StreamReader
-            fileReader = My.Computer.FileSystem.OpenTextFileReader(FITXER_BASE)
+        Dim captador As New Captador
 
-            Dim stringReader As String
-
-            While Not fileReader.EndOfStream
-                stringReader = fileReader.ReadLine()
-                Dim captador As New Captador
-                Dim splitted As String()
-
-                splitted = stringReader.Split(",")
-
-                If splitted.GetLength(0) <> 3 Then
-                    If splitted.GetLength(0) = 1 And splitted(0) = "" Then
-                        'Blank File, perhaps the end of the file
-                        Continue While
-                    Else
-                        RoundLog("Fitxer de dades corrupte")
-                    End If
-                ElseIf splitted(0).Trim() = "" Then
-                    RoundLog("Nom de captador erroni a la base de dades")
-                ElseIf comprovaTelefon(splitted(1).Trim()) > -2 Then
-                    RoundLog("Telèfon erroni al captador '" & splitted(0) & "' Número: " & splitted(1))
-                ElseIf splitted(2).Trim() <> "True" And splitted(2).Trim() <> "False" Then
-                    RoundLog("Estat del captador '" & splitted(0) & "' incorrecte: " & splitted(2))
-                Else
-                    captador.Nom = splitted(0).Trim()
-                    captador.Telefon = splitted(1).Trim()
-                    If splitted(2).Trim() = "True" Then
-                        captador.Actiu = True
-                    Else
-                        captador.Actiu = False
-                    End If
-                    captadors.Add(captador)
-                End If
-
-            End While
-
-            fileReader.Close()
-
-            Dim capta As New Captador
-            For Each capta In captadors
-                If Not My.Computer.FileSystem.FileExists(PATH_REGISTRES & "\" & capta.Nom) Then
-                    capta.creaRegistreCaptador()
-                End If
-            Next
-        Else
-            My.Computer.FileSystem.CreateDirectory(Application.StartupPath & "\resources")
-            IOTextFiles.createFile(FITXER_BASE)
-        End If
+        For Each captador In json.devices
+            If Not My.Computer.FileSystem.FileExists(PATH_REGISTRES & "\" & captador.Nom) Then
+                captador.creaRegistreCaptador()
+            End If
+        Next
 
         If My.Computer.FileSystem.FileExists(HISTORIC) Then
             Dim historicReader As System.IO.StreamReader
@@ -121,23 +78,17 @@ Public Class CCC
         threadDiskSpace.Start()
         DataGridView.ClearSelection()
 
-        If My.Computer.FileSystem.FileExists(PORT_COM) Then
-            Dim portReader As System.IO.StreamReader
-            portReader = My.Computer.FileSystem.OpenTextFileReader(PORT_COM)
-            lastport = portReader.ReadLine.Trim
-            portReader.Close()
-            Dim item As Object
-            Dim index As Integer = 0
-            If LBoxPorts.Items.Count > 0 Then
-                For Each item In LBoxPorts.Items
-                    If lastport = item.ToString Then
-                        LBoxPorts.SelectedIndex = index
-                        Connect2Port()
-                        Exit For
-                    End If
-                    index += 1
-                Next
-            End If
+        Dim item As Object
+        Dim index As Integer = 0
+        If LBoxPorts.Items.Count > 0 Then
+            For Each item In LBoxPorts.Items
+                If json.comPort = item.ToString Then
+                    LBoxPorts.SelectedIndex = index
+                    Connect2Port()
+                    Exit For
+                End If
+                index += 1
+            Next
         End If
 
     End Sub
@@ -175,7 +126,7 @@ Public Class CCC
         Dim captador As New Captador
 
         DataGridView.Rows.Clear()
-        For Each captador In captadors
+        For Each captador In json.devices
             updateDataGridView(captador)
         Next
 
@@ -293,40 +244,15 @@ Public Class CCC
         End If
 
     End Sub
-    Sub actualitzaCaptadors(ByRef file As String, ByRef captadors As List(Of Captador), Optional ByRef nomCaptador As String = "")
-        'Actualitza el llistat de captadors a DataGridView i el fitxer dels captadors
-
-        Dim captador As New Captador
-        Dim lines As String
-        Dim strActiu As String
-
-        lines = ""
-
-        For Each captador In captadors
-            strActiu = ""
-            If captador.Actiu = True Then
-                strActiu = "True"
-            ElseIf captador.Actiu = False Then
-                strActiu = "False"
-            End If
-
-            lines = lines & captador.Nom & "," & captador.Telefon & "," & strActiu & vbCrLf
-        Next
-
-        My.Computer.FileSystem.WriteAllText(file, lines, False)
-
-        InitializeDataGridView()
-
-    End Sub
 
     Function buscaCaptador(ByRef nom As String)
         'Busca el captador que tingui per nom el paràmetre nom
 
         Dim captador As New Captador
 
-        For Each captador In captadors
+        For Each captador In json.devices
             If captador.Nom = nom Then
-                Return captadors.IndexOf(captador)
+                Return json.devices.IndexOf(captador)
             End If
         Next
         Return (-1)
@@ -337,9 +263,9 @@ Public Class CCC
         'Busca el telèfon que li passem per paràmetre en els captadors
         Dim captador As New Captador
 
-        For Each captador In captadors
+        For Each captador In json.devices
             If captador.Telefon = telefon Then
-                Return captadors.IndexOf(captador)
+                Return json.devices.IndexOf(captador)
             End If
         Next
         Return (-1)
@@ -432,7 +358,8 @@ Public Class CCC
             If res = "OK" And reset = "OK" Then
                 connectStablished = True
                 ChangeConnectSign(0)
-                IOTextFiles.writeFile(PORT_COM, port)
+                json.comPort = port
+                IOTextFiles.updateJsonFile(json)
 
                 Dim threadSMS As New Thread(AddressOf SMSWorker)
                 If Not threadSMS.IsAlive Then
@@ -466,10 +393,10 @@ Public Class CCC
             If nouNom <> "" Then
                 indexCaptador = buscaCaptador(nouNom)
                 If indexCaptador = -1 Then
-                    captador = captadors(buscaCaptador(nomAntic))
-                    captador.Nom = nouNom
-                    actualitzaCaptadors(FITXER_BASE, captadors, nouNom)
+                    json.devices(buscaCaptador(nomAntic)).Nom = nouNom
+                    IOTextFiles.updateJsonFile(json)
                     captador.creaRegistreCaptador()
+                    InitializeDataGridView()
                     DataGridView.Focus()
                 Else
                     MsgBox("Aquest captador ja existeix", vbOKOnly)
@@ -491,10 +418,9 @@ Public Class CCC
             nouTelefon = nouTelefon.Replace(".", "")
             If nouTelefon <> "" Then
                 If comprovaTelefon(nouTelefon) < -1 Then
-                    captador = captadors(buscaCaptador(nomCaptador))
-                    captador.Telefon = nouTelefon
+                    json.devices(buscaCaptador(nomCaptador)).Telefon = nouTelefon
                     TBoxTelefon.Text = captador.Telefon
-                    actualitzaCaptadors(FITXER_BASE, captadors, nomCaptador)
+                    InitializeDataGridView()
                     DataGridView.Focus()
                 Else
                     MsgBox("Telèfon incorrecte o assignat a un altre captador", vbOKOnly)
@@ -523,9 +449,9 @@ Public Class CCC
                         captador.Telefon = telefon
                         captador.Actiu = True
 
-                        captadors.Add(captador)
+                        JsonFile.addDevice(captador)
                         captador.creaRegistreCaptador()
-                        actualitzaCaptadors(FITXER_BASE, captadors, captador.Nom)
+                        InitializeDataGridView()
                         DataGridView.Focus()
                     Else
                         MsgBox("Telèfon incorrecte o assignat a un altre captador", vbOKOnly)
@@ -563,8 +489,8 @@ Public Class CCC
         If nom <> "" Then
             esborrar = MsgBox("Voleu esborrar aquest captador? Es perdran totes les dades referents al mateix.", vbYesNo)
             If esborrar = 6 Then
-                captadors.RemoveAt(buscaCaptador(nom))
-                actualitzaCaptadors(FITXER_BASE, captadors)
+                JsonFile.removeDevice(buscaCaptador(nom))
+                InitializeDataGridView()
                 TBoxHistoric.Text = ""
                 TBoxTelefon.Text = ""
             End If
@@ -867,28 +793,30 @@ Public Class CCC
                         UpdateLastData()
 
                         If indexCaptador >= 0 Then
-                            captadors(indexCaptador).addData(form)
+                            json.devices(indexCaptador).addData(form)
                             'Si el captador està seleccionat mostrarem l'historial actualitzat
 
                             If DataGridView.CurrentRow.Index <> Nothing Then
                                 If DataGridView.CurrentRow.Index = indexCaptador Then
-                                    MostraHistorial(captadors(indexCaptador).Nom)
+                                    MostraHistorial(json.devices(indexCaptador).Nom)
                                 End If
                             End If
                             'Actualitzem el panell dels darrers missatges i la resta de dades per pantalla
                             '...sempre que el captador estigui actiu
-                            If captadors(indexCaptador).Actiu Then
-                                updateDataGridView(captadors(indexCaptador))
+                            If json.devices(indexCaptador).Actiu Then
+                                updateDataGridView(json.devices(indexCaptador))
+
                                 'Envia mails amb un nou thread
-                                MailConfiguration.getAlarmConfigs()
-                                If MailConfiguration.mailAlarm = "1" Then
-                                    Dim threadMailerDaemon As New Thread(AddressOf MailerDaemonWorker)
-                                    threadMailerDaemon.Start(txt)
-                                End If
+                                Dim threadMailerDaemon As New Thread(AddressOf MailerDaemonWorker)
+                                threadMailerDaemon.Start(txt)
+
                                 'Envia SMS
-                                If MailConfiguration.smsAlarm = "1" Then
-                                    Dim phone As String = ""
-                                    For Each phone In SMSConfiguration.getPhonesList
+                                Dim phone As String = ""
+                                Dim deviceIndex As Integer = buscaTelefon(txt.Phone)
+                                If deviceIndex >= 0 Then
+                                    Dim userID As Integer
+                                    For Each userID In json.devices(deviceIndex).UsersList
+                                        phone = JsonFile.getPhone(userID)
                                         Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
                                         If resSMS <> "OK" Then
                                             'MsgBox(resSMS, vbOKOnly)
@@ -939,10 +867,16 @@ Public Class CCC
         threadSMSON = False
     End Sub
 
-    Public Sub MailerDaemonWorker(ByVal smsTxt As Object)
+    Public Sub MailerDaemonWorker(ByVal smsTxt As SMSText)
 
         Dim addresses As New ArrayList
-        addresses = MailConfiguration.get_addresses
+        Dim deviceIndex As Integer = buscaTelefon(smsTxt.Phone)
+        If deviceIndex >= 0 Then
+            Dim userId As Integer
+            For Each userId In CCC.json.devices(deviceIndex).UsersList
+                addresses.Add(JsonFile.getMail(userId))
+            Next
+        End If
 
         MailConfiguration.sendMail(addresses, smsTxt.AllMessage, smsTxt.Name, MailPriority.Normal)
 
@@ -1070,7 +1004,7 @@ Public Class CCC
         nomCaptador = Me.DataGridView(0, DataGridView.CurrentRow.Index).Value
 
         If nomCaptador <> Nothing Then
-            captador = captadors(buscaCaptador(nomCaptador))
+            captador = json.devices(buscaCaptador(nomCaptador))
             captador.Actiu = CboxActivar.Checked
             updateDataGridView(captador)
             DataGridView.Focus()
@@ -1093,11 +1027,11 @@ Public Class CCC
 
             'TBoxHistoric.Text = ""
             indexCaptador = buscaCaptador(nomCaptador)
-            If indexCaptador > captadors.Count Or indexCaptador = -1 Then
+            If indexCaptador > json.devices.Count Or indexCaptador = -1 Then
                 TBoxTelefon.Text = ""
             Else
-                TBoxTelefon.Text = captadors(indexCaptador).Telefon
-                captador = captadors(indexCaptador)
+                TBoxTelefon.Text = json.devices(indexCaptador).Telefon
+                captador = json.devices(indexCaptador)
                 CboxActivar.Checked = captador.Actiu
             End If
 
@@ -1126,7 +1060,6 @@ Public Class CCC
 
 End Class
 
-
 Public Class Captador
 
     Public Const ALARMA As String = "ALARMA"
@@ -1145,7 +1078,9 @@ Public Class Captador
     Public Actiu As Boolean = False
     Public LastMessage As String = ""
     Public LastState As String = ""
-    Public NumeroPropietats As Integer = 3
+    Public alarmMail As Boolean = False
+    Public alarmSMS As Boolean = False
+    Public UsersList As New List(Of Integer)
 
     Public Function FuncioDarrerMissatge()
         Dim linea As String
@@ -1236,3 +1171,154 @@ Public Class SMSText
 
 End Class
 
+Public Class MailServerConfig
+    Public smtp As String
+    Public ssl As String
+    Public port As String
+    Public login As String
+    Public password As String
+End Class
+
+Public Class User
+    Public id As Integer
+    Public name As String
+    Public phone As String
+    Public mail As String
+    Public activeUser As Boolean
+
+End Class
+
+Public Class JsonFile
+    Public devices As New List(Of Captador)
+    Public mailServerConfig As New MailServerConfig
+    Public comPort As String
+    Public users As New List(Of User)
+
+    Public Shared Sub updateJsonVar()
+        Try
+            Dim filereader = My.Computer.FileSystem.ReadAllText(CCC.SETTINGSFILE)
+
+            CCC.json = Newtonsoft.Json.JsonConvert.DeserializeObject(Of JsonFile)(filereader)
+
+        Catch ex As Exception
+            CCC.RoundLog(ex.ToString)
+            My.Computer.FileSystem.CreateDirectory(Application.StartupPath & "\resources")
+            Dim newJson As String = JsonConvert.SerializeObject(CCC.json)
+            My.Computer.FileSystem.WriteAllText(CCC.SETTINGSFILE, newJson, False)
+        End Try
+    End Sub
+
+    Public Shared Sub addDevice(ByRef nouCaptador As Captador)
+        CCC.json.devices.Add(nouCaptador)
+        IOTextFiles.updateJsonFile(CCC.json)
+    End Sub
+
+    Public Shared Sub removeDevice(ByRef index As Integer)
+        CCC.json.devices.RemoveAt(index)
+        IOTextFiles.updateJsonFile(CCC.json)
+    End Sub
+
+    Public Shared Sub addUser(ByRef newUser As User)
+        For Each usuari In CCC.json.users
+            If usuari.phone = newUser.phone And usuari.mail = newUser.mail And usuari.name = newUser.name Then
+                usuari.activeUser = True
+                IOTextFiles.updateJsonFile(CCC.json)
+                Exit Sub
+            End If
+        Next
+        newUser.id = CCC.json.users.Count
+        CCC.json.users.Add(newUser)
+
+        IOTextFiles.updateJsonFile(CCC.json)
+    End Sub
+
+    Public Shared Sub removeUser(ByRef idUser As Integer)
+        CCC.json.users(idUser).activeUser = False
+        IOTextFiles.updateJsonFile(CCC.json)
+    End Sub
+
+    Public Shared Function getActiveUsers()
+        Dim usuari As New User
+        Dim ids As New List(Of Integer)
+        For Each usuari In CCC.json.users
+            If usuari.activeUser Then
+                ids.Add(usuari.id)
+            End If
+        Next
+        Return ids
+    End Function
+
+    Public Shared Function getId(ByRef userName As String)
+        Dim id As Integer = -1
+
+        For Each User In CCC.json.users
+            If User.name = userName And User.activeUser = True Then
+                Return User.id
+            End If
+        Next
+        Return id
+    End Function
+
+    Public Shared Function getPhone(ByVal userId As Integer)
+        Return (CCC.json.users(userId).phone)
+    End Function
+
+    Public Shared Function getMail(ByVal userId As Integer)
+        Return (CCC.json.users(userId).mail)
+    End Function
+
+    Public Shared Function getName(ByVal userId As Integer)
+        Return (CCC.json.users(userId).name)
+    End Function
+
+    Public Shared Sub setPhone(ByVal userId As Integer, phone As String)
+        CCC.json.users(userId).phone = phone
+        IOTextFiles.updateJsonFile(CCC.json)
+    End Sub
+
+    Public Shared Sub setMail(ByVal userId As Integer, mail As String)
+        CCC.json.users(userId).mail = mail
+        IOTextFiles.updateJsonFile(CCC.json)
+    End Sub
+
+    Public Shared Sub setName(ByVal userId As Integer, name As String)
+        CCC.json.users(userId).name = name
+        IOTextFiles.updateJsonFile(CCC.json)
+    End Sub
+
+    Public Shared Function getAssignedToUser(ByVal userId As String)
+        Dim devicesList As New List(Of String)
+        For Each device In CCC.json.devices
+            If device.UsersList.IndexOf(userId) >= 0 Then
+                devicesList.Add(device.Nom)
+            End If
+        Next
+        Return (devicesList)
+
+    End Function
+
+    Public Shared Sub setAssignedUser(ByVal deviceNames As List(Of String), ByRef userId As Integer)
+        'Només rebem els captadors seleccionats, vol dir que la resta no hauran de notificar al userId
+        Dim captador As New Captador
+
+        For Each captador In CCC.json.devices
+            Dim deviceIndex = CCC.buscaCaptador(captador.Nom) 'Busca el captador
+            If deviceIndex >= 0 Then 'Si el captador existeix
+                Dim userIndex = CCC.json.devices(deviceIndex).UsersList.IndexOf(userId) 'Mirem si l'usuari és al captador
+                If deviceNames.IndexOf(captador.Nom) >= 0 Then 'Si el captador és a la llista dels seleccionats
+                    If userIndex < 0 Then 'L'usuari no pertanyia al llistat del captador
+                        CCC.json.devices(deviceIndex).UsersList.Add(userId) 'L'afegim
+                    End If 'Si l'usuari ja pertanyia al llistat, no fem res
+
+                Else 'Si el captador no està seleccionat cal eliminar l'usuari del llistat (si hi és)
+                    If userIndex >= 0 Then 'Si l'usuari estava configurat
+                        CCC.json.devices(deviceIndex).UsersList.RemoveAt(userIndex)
+                    End If 'Si l'usuari no hi era no fem res
+                End If
+            End If 'Si el captador no existeix no fem res
+        Next
+        IOTextFiles.updateJsonFile(CCC.json)
+
+    End Sub
+
+End Class

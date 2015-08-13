@@ -1,6 +1,7 @@
 ﻿Imports System
 Imports System.IO
 Imports System.Text
+Imports Newtonsoft.Json
 
 Module IOTextFiles
     'Create a file.
@@ -17,6 +18,11 @@ Module IOTextFiles
             createFile(file2write)
         End If
         My.Computer.FileSystem.WriteAllText(file2write, text2write, False)
+    End Sub
+
+    Public Sub updateJsonFile(ByVal json As Object)
+        Dim jsonStr As String = JsonConvert.SerializeObject(json)
+        writeFile(CCC.SETTINGSFILE, jsonStr)
     End Sub
 
 End Module

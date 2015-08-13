@@ -2,7 +2,6 @@
 
 Module SMSConfiguration
     Public ReadOnly SLEEPING_TIME As Integer = 1000 'Per a donar temps al mòdem a respondre
-    Public ReadOnly FILE_SMS As String = CCC.STARTUP_PATH & "\resources\sms.list"
 
     Function resetModem(serialport)
         'Reset mòdem
@@ -32,10 +31,10 @@ Module SMSConfiguration
                 .Parity = IO.Ports.Parity.None
                 .Handshake = IO.Ports.Handshake.RequestToSend
                 .WriteBufferSize = 1024 '1024
-                .ReadBufferSize = 2048 '2048
+                .ReadBufferSize = 4096 '2048
                 .WriteTimeout = 500
                 .Encoding = System.Text.Encoding.Default
-                .ReadTimeout = 7000
+                .ReadTimeout = 8000
                 .RtsEnable = False
                 .Open()
             End With
@@ -57,7 +56,6 @@ Module SMSConfiguration
             CCC.RoundLog("Comencem a enviar SMS amb el text: " & message)
             sendToModem(serialport, "AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
             resp = readFromModem(serialport, ">")
-
             If resp = "ERROR" Then
                 CCC.RoundLog("& Error writing message body")
             End If
@@ -70,24 +68,6 @@ Module SMSConfiguration
             End If
             Return "OK"
         End If
-
-    End Function
-
-    Function getPhonesList()
-
-        If Not My.Computer.FileSystem.FileExists(FILE_SMS) Then
-            IOTextFiles.createFile(FILE_SMS)
-            Return Nothing
-        End If
-
-        Dim fileReader As System.IO.StreamReader
-        fileReader = My.Computer.FileSystem.OpenTextFileReader(FILE_SMS)
-        Dim phones As New List(Of String)
-        While Not fileReader.EndOfStream
-            phones.Add(fileReader.ReadLine().Trim)
-        End While
-        fileReader.Close()
-        Return phones
 
     End Function
 

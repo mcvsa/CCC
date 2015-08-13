@@ -2,58 +2,30 @@
 
 Module MailConfiguration
 
-    Public ReadOnly FILE_MAILS As String = CCC.STARTUP_PATH & "\resources\mail.list"
-
     Public SmtpConfig As String
     Public SslConfig As String
     Public PortConfig As String
     Public LoginConfig As String
     Public PasswdConfig As String
 
-    Public mailAlarm As Integer
-    Public smsAlarm As Integer
-
     Sub SetMailConfig()
-        'Reads mail configuration. If it is wrong or it doesn't exists: Warning, sets the default configuration
-
-        SmtpConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSMTP)
-        SslConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSSL)
-        PortConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPORT)
-        LoginConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYLOGIN)
-        PasswdConfig = GetSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPASSWORD)
+        'Reads mail configuration.
+        SmtpConfig = CCC.json.mailServerConfig.smtp
+        SslConfig = CCC.json.mailServerConfig.ssl
+        PortConfig = CCC.json.mailServerConfig.port
+        LoginConfig = CCC.json.mailServerConfig.login
+        PasswdConfig = CCC.json.mailServerConfig.password
 
     End Sub
 
     Sub saveMailConfig(ByVal SMTPServer, ByVal SSLServer, ByVal portServer, ByVal loginServer, ByVal passwdServer)
         'Guarda les dades de configuració del servidor
 
-        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSMTP, SMTPServer)
-        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYSSL, SSLServer)
-        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPORT, portServer)
-        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYLOGIN, loginServer)
-        SaveSetting(Settings.APPNAME, Settings.SECTIONMAIL, Settings.KEYPASSWORD, passwdServer)
-
-    End Sub
-
-    Sub activateMailSmsAlarms(ByVal statusMail As Boolean, ByVal statusSms As Boolean)
-        'Writes alarms status in its config file
-
-        Dim strMail As String = ""
-        Dim strSMS As String = ""
-
-        If statusMail Then
-            strMail = "1"
-        Else
-            strMail = "0"
-        End If
-        If statusSms Then
-            strSMS = "1"
-        Else
-            strSMS = "0"
-        End If
-
-        SaveSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYSMSALARM, strSMS)
-        SaveSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYMAILALARM, strMail)
+        CCC.json.mailServerConfig.smtp = SMTPServer
+        CCC.json.mailServerConfig.ssl = SSLServer
+        CCC.json.mailServerConfig.port = portServer
+        CCC.json.mailServerConfig.login = loginServer
+        CCC.json.mailServerConfig.password = passwdServer
 
     End Sub
 
@@ -96,38 +68,18 @@ Module MailConfiguration
         Return "OK"
     End Function
 
-    Public Sub getAlarmConfigs()
 
-        Dim smsAlarmConfig = GetSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYSMSALARM)
-        Dim mailAlarmConfig = GetSetting(Settings.APPNAME, Settings.SECTIONALARMS, Settings.KEYMAILALARM)
+    Function comprovaMail(ByRef mail As String)
+        'Comprova que la direcció de correu té una mica de sentit. Si no en té retorna "FALSE", i
+        'si la direcció es considera correcta retorna "TRUE"
+        Dim message As New MailMessage
+        Try
+            message.To.Add(New MailAddress(mail))
+        Catch ex As Exception
+            Return False
+        End Try
 
-        If smsAlarmConfig = "" Then
-            smsAlarmConfig = "0"
-        End If
-        If mailAlarmConfig = "" Then
-            mailAlarmConfig = "0"
-        End If
-
-        mailAlarm = CInt(mailAlarmConfig)
-        smsAlarm = CInt(smsAlarmConfig)
-
-    End Sub
-
-    Function get_addresses()
-
-        If Not My.Computer.FileSystem.FileExists(FILE_MAILS) Then
-            IOTextFiles.createFile(FILE_MAILS)
-            Return Nothing
-        End If
-
-        Dim fileReader As System.IO.StreamReader
-        fileReader = My.Computer.FileSystem.OpenTextFileReader(FILE_MAILS)
-        Dim addresses As New ArrayList
-        While Not fileReader.EndOfStream
-            addresses.Add(fileReader.ReadLine().Trim)
-        End While
-        fileReader.Close()
-        Return addresses
+        Return True
 
     End Function
 

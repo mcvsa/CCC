@@ -23,196 +23,237 @@ Partial Class ConfigAlerts
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
-        Me.CBoxSMS = New System.Windows.Forms.CheckBox()
-        Me.CBoxMail = New System.Windows.Forms.CheckBox()
         Me.BtTestMail = New System.Windows.Forms.Button()
-        Me.BtAddMail = New System.Windows.Forms.Button()
         Me.BtConfigMail = New System.Windows.Forms.Button()
-        Me.BtNewPhone = New System.Windows.Forms.Button()
         Me.BtTestSMS = New System.Windows.Forms.Button()
-        Me.BtRemovePhone = New System.Windows.Forms.Button()
-        Me.BtRemoveMail = New System.Windows.Forms.Button()
-        Me.LBoxMails = New System.Windows.Forms.ListBox()
-        Me.LBoxSMS = New System.Windows.Forms.ListBox()
         Me.SerialPortTest = New System.IO.Ports.SerialPort(Me.components)
         Me.CBoxSerialPort = New System.Windows.Forms.ComboBox()
-        Me.GBoxSMSAlarms = New System.Windows.Forms.GroupBox()
-        Me.GBoxMailAlarms = New System.Windows.Forms.GroupBox()
-        Me.GBoxSMSAlarms.SuspendLayout()
-        Me.GBoxMailAlarms.SuspendLayout()
+        Me.GBoxUsers = New System.Windows.Forms.GroupBox()
+        Me.LBUsers = New System.Windows.Forms.ListBox()
+        Me.CkLBCaptadors = New System.Windows.Forms.CheckedListBox()
+        Me.BtSelectAll = New System.Windows.Forms.Button()
+        Me.BtDeselectAll = New System.Windows.Forms.Button()
+        Me.GBoxCaptadors = New System.Windows.Forms.GroupBox()
+        Me.BtAddUser = New System.Windows.Forms.Button()
+        Me.BtRemoveUser = New System.Windows.Forms.Button()
+        Me.BtModifyUser = New System.Windows.Forms.Button()
+        Me.BtAssignDevices = New System.Windows.Forms.Button()
+        Me.GBoxConfigAndTest = New System.Windows.Forms.GroupBox()
+        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.BtClose = New System.Windows.Forms.Button()
+        Me.GBoxUsers.SuspendLayout()
+        Me.GBoxCaptadors.SuspendLayout()
+        Me.GBoxConfigAndTest.SuspendLayout()
+        Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
-        '
-        'CBoxSMS
-        '
-        Me.CBoxSMS.AutoSize = True
-        Me.CBoxSMS.Location = New System.Drawing.Point(13, 28)
-        Me.CBoxSMS.Name = "CBoxSMS"
-        Me.CBoxSMS.Size = New System.Drawing.Size(119, 17)
-        Me.CBoxSMS.TabIndex = 0
-        Me.CBoxSMS.Text = "Activar alertes SMS"
-        Me.CBoxSMS.UseVisualStyleBackColor = True
-        '
-        'CBoxMail
-        '
-        Me.CBoxMail.AutoSize = True
-        Me.CBoxMail.Location = New System.Drawing.Point(13, 28)
-        Me.CBoxMail.Name = "CBoxMail"
-        Me.CBoxMail.Size = New System.Drawing.Size(115, 17)
-        Me.CBoxMail.TabIndex = 1
-        Me.CBoxMail.Text = "Activar alertes Mail"
-        Me.CBoxMail.UseVisualStyleBackColor = True
         '
         'BtTestMail
         '
-        Me.BtTestMail.Location = New System.Drawing.Point(13, 51)
+        Me.BtTestMail.Location = New System.Drawing.Point(11, 70)
         Me.BtTestMail.Name = "BtTestMail"
-        Me.BtTestMail.Size = New System.Drawing.Size(130, 30)
+        Me.BtTestMail.Size = New System.Drawing.Size(100, 30)
         Me.BtTestMail.TabIndex = 14
-        Me.BtTestMail.Text = "Test enviament correu"
+        Me.BtTestMail.Text = "Test mail"
         Me.BtTestMail.UseVisualStyleBackColor = True
-        '
-        'BtAddMail
-        '
-        Me.BtAddMail.Location = New System.Drawing.Point(13, 103)
-        Me.BtAddMail.Name = "BtAddMail"
-        Me.BtAddMail.Size = New System.Drawing.Size(130, 30)
-        Me.BtAddMail.TabIndex = 16
-        Me.BtAddMail.Text = "Afegir Mail"
-        Me.BtAddMail.UseVisualStyleBackColor = True
         '
         'BtConfigMail
         '
-        Me.BtConfigMail.Location = New System.Drawing.Point(149, 51)
+        Me.BtConfigMail.Location = New System.Drawing.Point(11, 28)
         Me.BtConfigMail.Name = "BtConfigMail"
-        Me.BtConfigMail.Size = New System.Drawing.Size(130, 30)
+        Me.BtConfigMail.Size = New System.Drawing.Size(100, 30)
         Me.BtConfigMail.TabIndex = 17
-        Me.BtConfigMail.Text = "Config. servidor correu"
+        Me.BtConfigMail.Text = "Config. servidor"
         Me.BtConfigMail.UseVisualStyleBackColor = True
-        '
-        'BtNewPhone
-        '
-        Me.BtNewPhone.Location = New System.Drawing.Point(13, 103)
-        Me.BtNewPhone.Name = "BtNewPhone"
-        Me.BtNewPhone.Size = New System.Drawing.Size(130, 30)
-        Me.BtNewPhone.TabIndex = 18
-        Me.BtNewPhone.Text = "Afegir Telèfon"
-        Me.BtNewPhone.UseVisualStyleBackColor = True
         '
         'BtTestSMS
         '
-        Me.BtTestSMS.Location = New System.Drawing.Point(13, 51)
+        Me.BtTestSMS.Location = New System.Drawing.Point(11, 62)
         Me.BtTestSMS.Name = "BtTestSMS"
-        Me.BtTestSMS.Size = New System.Drawing.Size(130, 30)
+        Me.BtTestSMS.Size = New System.Drawing.Size(100, 30)
         Me.BtTestSMS.TabIndex = 15
-        Me.BtTestSMS.Text = "Test enviament SMS"
+        Me.BtTestSMS.Text = "Test SMS"
         Me.BtTestSMS.UseVisualStyleBackColor = True
-        '
-        'BtRemovePhone
-        '
-        Me.BtRemovePhone.Location = New System.Drawing.Point(149, 103)
-        Me.BtRemovePhone.Name = "BtRemovePhone"
-        Me.BtRemovePhone.Size = New System.Drawing.Size(130, 30)
-        Me.BtRemovePhone.TabIndex = 19
-        Me.BtRemovePhone.Text = "Esborrar Telèfon"
-        Me.BtRemovePhone.UseVisualStyleBackColor = True
-        '
-        'BtRemoveMail
-        '
-        Me.BtRemoveMail.Location = New System.Drawing.Point(149, 103)
-        Me.BtRemoveMail.Name = "BtRemoveMail"
-        Me.BtRemoveMail.Size = New System.Drawing.Size(130, 30)
-        Me.BtRemoveMail.TabIndex = 20
-        Me.BtRemoveMail.Text = "Esborrar Mail"
-        Me.BtRemoveMail.UseVisualStyleBackColor = True
-        '
-        'LBoxMails
-        '
-        Me.LBoxMails.FormattingEnabled = True
-        Me.LBoxMails.Location = New System.Drawing.Point(13, 142)
-        Me.LBoxMails.Name = "LBoxMails"
-        Me.LBoxMails.Size = New System.Drawing.Size(266, 134)
-        Me.LBoxMails.TabIndex = 22
-        '
-        'LBoxSMS
-        '
-        Me.LBoxSMS.FormattingEnabled = True
-        Me.LBoxSMS.Location = New System.Drawing.Point(13, 142)
-        Me.LBoxSMS.Name = "LBoxSMS"
-        Me.LBoxSMS.Size = New System.Drawing.Size(266, 134)
-        Me.LBoxSMS.TabIndex = 23
         '
         'CBoxSerialPort
         '
         Me.CBoxSerialPort.FormattingEnabled = True
-        Me.CBoxSerialPort.Location = New System.Drawing.Point(149, 57)
+        Me.CBoxSerialPort.Location = New System.Drawing.Point(11, 24)
         Me.CBoxSerialPort.Name = "CBoxSerialPort"
-        Me.CBoxSerialPort.Size = New System.Drawing.Size(130, 21)
+        Me.CBoxSerialPort.Size = New System.Drawing.Size(100, 21)
         Me.CBoxSerialPort.TabIndex = 24
         '
-        'GBoxSMSAlarms
+        'GBoxUsers
         '
-        Me.GBoxSMSAlarms.Controls.Add(Me.CBoxSerialPort)
-        Me.GBoxSMSAlarms.Controls.Add(Me.LBoxSMS)
-        Me.GBoxSMSAlarms.Controls.Add(Me.BtRemovePhone)
-        Me.GBoxSMSAlarms.Controls.Add(Me.BtNewPhone)
-        Me.GBoxSMSAlarms.Controls.Add(Me.BtTestSMS)
-        Me.GBoxSMSAlarms.Controls.Add(Me.CBoxSMS)
-        Me.GBoxSMSAlarms.Location = New System.Drawing.Point(4, 4)
-        Me.GBoxSMSAlarms.Name = "GBoxSMSAlarms"
-        Me.GBoxSMSAlarms.Size = New System.Drawing.Size(292, 289)
-        Me.GBoxSMSAlarms.TabIndex = 25
-        Me.GBoxSMSAlarms.TabStop = False
-        Me.GBoxSMSAlarms.Text = "Alarmes SMS"
+        Me.GBoxUsers.Controls.Add(Me.BtAssignDevices)
+        Me.GBoxUsers.Controls.Add(Me.BtRemoveUser)
+        Me.GBoxUsers.Controls.Add(Me.BtModifyUser)
+        Me.GBoxUsers.Controls.Add(Me.LBUsers)
+        Me.GBoxUsers.Controls.Add(Me.BtAddUser)
+        Me.GBoxUsers.Location = New System.Drawing.Point(238, 13)
+        Me.GBoxUsers.Name = "GBoxUsers"
+        Me.GBoxUsers.Size = New System.Drawing.Size(324, 286)
+        Me.GBoxUsers.TabIndex = 25
+        Me.GBoxUsers.TabStop = False
+        Me.GBoxUsers.Text = "Usuaris"
         '
-        'GBoxMailAlarms
+        'LBUsers
         '
-        Me.GBoxMailAlarms.Controls.Add(Me.LBoxMails)
-        Me.GBoxMailAlarms.Controls.Add(Me.BtRemoveMail)
-        Me.GBoxMailAlarms.Controls.Add(Me.BtConfigMail)
-        Me.GBoxMailAlarms.Controls.Add(Me.BtAddMail)
-        Me.GBoxMailAlarms.Controls.Add(Me.BtTestMail)
-        Me.GBoxMailAlarms.Controls.Add(Me.CBoxMail)
-        Me.GBoxMailAlarms.Location = New System.Drawing.Point(306, 4)
-        Me.GBoxMailAlarms.Name = "GBoxMailAlarms"
-        Me.GBoxMailAlarms.Size = New System.Drawing.Size(292, 289)
-        Me.GBoxMailAlarms.TabIndex = 26
-        Me.GBoxMailAlarms.TabStop = False
-        Me.GBoxMailAlarms.Text = "Alarmes Mail"
+        Me.LBUsers.FormattingEnabled = True
+        Me.LBUsers.Location = New System.Drawing.Point(10, 24)
+        Me.LBUsers.Name = "LBUsers"
+        Me.LBUsers.Size = New System.Drawing.Size(199, 251)
+        Me.LBUsers.TabIndex = 0
+        '
+        'CkLBCaptadors
+        '
+        Me.CkLBCaptadors.CheckOnClick = True
+        Me.CkLBCaptadors.ColumnWidth = 132
+        Me.CkLBCaptadors.FormattingEnabled = True
+        Me.CkLBCaptadors.Location = New System.Drawing.Point(9, 25)
+        Me.CkLBCaptadors.MultiColumn = True
+        Me.CkLBCaptadors.Name = "CkLBCaptadors"
+        Me.CkLBCaptadors.Size = New System.Drawing.Size(206, 214)
+        Me.CkLBCaptadors.TabIndex = 23
+        '
+        'BtSelectAll
+        '
+        Me.BtSelectAll.Location = New System.Drawing.Point(12, 245)
+        Me.BtSelectAll.Name = "BtSelectAll"
+        Me.BtSelectAll.Size = New System.Drawing.Size(100, 30)
+        Me.BtSelectAll.TabIndex = 25
+        Me.BtSelectAll.Text = "Seleccionar tots"
+        Me.BtSelectAll.UseVisualStyleBackColor = True
+        '
+        'BtDeselectAll
+        '
+        Me.BtDeselectAll.Location = New System.Drawing.Point(118, 245)
+        Me.BtDeselectAll.Name = "BtDeselectAll"
+        Me.BtDeselectAll.Size = New System.Drawing.Size(100, 30)
+        Me.BtDeselectAll.TabIndex = 27
+        Me.BtDeselectAll.Text = "Deseleccionar"
+        Me.BtDeselectAll.UseVisualStyleBackColor = True
+        '
+        'GBoxCaptadors
+        '
+        Me.GBoxCaptadors.Controls.Add(Me.CkLBCaptadors)
+        Me.GBoxCaptadors.Controls.Add(Me.BtSelectAll)
+        Me.GBoxCaptadors.Controls.Add(Me.BtDeselectAll)
+        Me.GBoxCaptadors.Location = New System.Drawing.Point(8, 13)
+        Me.GBoxCaptadors.Name = "GBoxCaptadors"
+        Me.GBoxCaptadors.Size = New System.Drawing.Size(224, 286)
+        Me.GBoxCaptadors.TabIndex = 28
+        Me.GBoxCaptadors.TabStop = False
+        Me.GBoxCaptadors.Text = "Captadors"
+        '
+        'BtAddUser
+        '
+        Me.BtAddUser.Location = New System.Drawing.Point(218, 175)
+        Me.BtAddUser.Name = "BtAddUser"
+        Me.BtAddUser.Size = New System.Drawing.Size(100, 30)
+        Me.BtAddUser.TabIndex = 29
+        Me.BtAddUser.Text = "Afegir usuari"
+        Me.BtAddUser.UseVisualStyleBackColor = True
+        '
+        'BtRemoveUser
+        '
+        Me.BtRemoveUser.Location = New System.Drawing.Point(218, 245)
+        Me.BtRemoveUser.Name = "BtRemoveUser"
+        Me.BtRemoveUser.Size = New System.Drawing.Size(100, 30)
+        Me.BtRemoveUser.TabIndex = 30
+        Me.BtRemoveUser.Text = "Eliminar usuari"
+        Me.BtRemoveUser.UseVisualStyleBackColor = True
+        '
+        'BtModifyUser
+        '
+        Me.BtModifyUser.Location = New System.Drawing.Point(218, 211)
+        Me.BtModifyUser.Name = "BtModifyUser"
+        Me.BtModifyUser.Size = New System.Drawing.Size(100, 30)
+        Me.BtModifyUser.TabIndex = 31
+        Me.BtModifyUser.Text = "Modificar usuari"
+        Me.BtModifyUser.UseVisualStyleBackColor = True
+        '
+        'BtAssignDevices
+        '
+        Me.BtAssignDevices.BackColor = System.Drawing.SystemColors.ControlDark
+        Me.BtAssignDevices.FlatStyle = System.Windows.Forms.FlatStyle.System
+        Me.BtAssignDevices.Location = New System.Drawing.Point(218, 24)
+        Me.BtAssignDevices.Name = "BtAssignDevices"
+        Me.BtAssignDevices.Size = New System.Drawing.Size(100, 100)
+        Me.BtAssignDevices.TabIndex = 32
+        Me.BtAssignDevices.Text = "Assignar captadors a usuari"
+        Me.BtAssignDevices.UseVisualStyleBackColor = False
+        '
+        'GBoxConfigAndTest
+        '
+        Me.GBoxConfigAndTest.Controls.Add(Me.BtTestMail)
+        Me.GBoxConfigAndTest.Controls.Add(Me.BtConfigMail)
+        Me.GBoxConfigAndTest.Location = New System.Drawing.Point(588, 13)
+        Me.GBoxConfigAndTest.Name = "GBoxConfigAndTest"
+        Me.GBoxConfigAndTest.Size = New System.Drawing.Size(121, 111)
+        Me.GBoxConfigAndTest.TabIndex = 29
+        Me.GBoxConfigAndTest.TabStop = False
+        Me.GBoxConfigAndTest.Text = "Config. i test mail"
+        '
+        'GroupBox1
+        '
+        Me.GroupBox1.Controls.Add(Me.BtTestSMS)
+        Me.GroupBox1.Controls.Add(Me.CBoxSerialPort)
+        Me.GroupBox1.Location = New System.Drawing.Point(588, 142)
+        Me.GroupBox1.Name = "GroupBox1"
+        Me.GroupBox1.Size = New System.Drawing.Size(121, 109)
+        Me.GroupBox1.TabIndex = 30
+        Me.GroupBox1.TabStop = False
+        Me.GroupBox1.Text = "Test SMS"
+        '
+        'BtClose
+        '
+        Me.BtClose.Location = New System.Drawing.Point(579, 269)
+        Me.BtClose.Name = "BtClose"
+        Me.BtClose.Size = New System.Drawing.Size(130, 30)
+        Me.BtClose.TabIndex = 31
+        Me.BtClose.Text = "Tancar finestra"
+        Me.BtClose.UseVisualStyleBackColor = True
         '
         'ConfigAlerts
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(604, 295)
-        Me.Controls.Add(Me.GBoxMailAlarms)
-        Me.Controls.Add(Me.GBoxSMSAlarms)
+        Me.ClientSize = New System.Drawing.Size(719, 313)
+        Me.Controls.Add(Me.BtClose)
+        Me.Controls.Add(Me.GroupBox1)
+        Me.Controls.Add(Me.GBoxConfigAndTest)
+        Me.Controls.Add(Me.GBoxCaptadors)
+        Me.Controls.Add(Me.GBoxUsers)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
         Me.MaximizeBox = False
-        Me.MaximumSize = New System.Drawing.Size(620, 333)
+        Me.MaximumSize = New System.Drawing.Size(735, 351)
         Me.MinimizeBox = False
-        Me.MinimumSize = New System.Drawing.Size(620, 333)
+        Me.MinimumSize = New System.Drawing.Size(735, 351)
         Me.Name = "ConfigAlerts"
         Me.Text = "Configuració Alertes"
-        Me.GBoxSMSAlarms.ResumeLayout(False)
-        Me.GBoxSMSAlarms.PerformLayout()
-        Me.GBoxMailAlarms.ResumeLayout(False)
-        Me.GBoxMailAlarms.PerformLayout()
+        Me.GBoxUsers.ResumeLayout(False)
+        Me.GBoxCaptadors.ResumeLayout(False)
+        Me.GBoxConfigAndTest.ResumeLayout(False)
+        Me.GroupBox1.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
-    Friend WithEvents CBoxSMS As System.Windows.Forms.CheckBox
-    Friend WithEvents CBoxMail As System.Windows.Forms.CheckBox
     Friend WithEvents BtTestMail As System.Windows.Forms.Button
-    Friend WithEvents BtAddMail As System.Windows.Forms.Button
     Friend WithEvents BtConfigMail As System.Windows.Forms.Button
-    Friend WithEvents BtNewPhone As System.Windows.Forms.Button
     Friend WithEvents BtTestSMS As System.Windows.Forms.Button
-    Friend WithEvents BtRemovePhone As System.Windows.Forms.Button
-    Friend WithEvents BtRemoveMail As System.Windows.Forms.Button
-    Friend WithEvents LBoxMails As System.Windows.Forms.ListBox
-    Friend WithEvents LBoxSMS As System.Windows.Forms.ListBox
     Friend WithEvents SerialPortTest As System.IO.Ports.SerialPort
     Friend WithEvents CBoxSerialPort As System.Windows.Forms.ComboBox
-    Friend WithEvents GBoxSMSAlarms As System.Windows.Forms.GroupBox
-    Friend WithEvents GBoxMailAlarms As System.Windows.Forms.GroupBox
+    Friend WithEvents GBoxUsers As System.Windows.Forms.GroupBox
+    Friend WithEvents CkLBCaptadors As System.Windows.Forms.CheckedListBox
+    Friend WithEvents BtSelectAll As System.Windows.Forms.Button
+    Friend WithEvents BtDeselectAll As System.Windows.Forms.Button
+    Friend WithEvents GBoxCaptadors As System.Windows.Forms.GroupBox
+    Friend WithEvents BtAddUser As System.Windows.Forms.Button
+    Friend WithEvents BtRemoveUser As System.Windows.Forms.Button
+    Friend WithEvents BtModifyUser As System.Windows.Forms.Button
+    Friend WithEvents LBUsers As System.Windows.Forms.ListBox
+    Friend WithEvents BtAssignDevices As System.Windows.Forms.Button
+    Friend WithEvents GBoxConfigAndTest As System.Windows.Forms.GroupBox
+    Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
+    Friend WithEvents BtClose As System.Windows.Forms.Button
 End Class

@@ -8,6 +8,8 @@ Public Class ConfigAlerts
 
     Public ReadOnly TEST_MESSAGE = "Missatge de prova"
 
+    Public Shared idToModify As Integer = Nothing
+
     Private Sub BtTestMail_Click(sender As Object, e As EventArgs) Handles BtTestMail.Click
         'Prova que el mail funcioni. Demana una direcció on enviar.
         'Si alguna configuració fos errònia mostrarà un error.
@@ -46,76 +48,8 @@ Public Class ConfigAlerts
         FormConfigMail.Show()
     End Sub
 
-    Private Sub BtRemoveMail_Click(sender As Object, e As EventArgs) Handles BtRemoveMail.Click
-        'Esborra la direcció de mail seleccionada a la llista.
-        LBoxMails.Items.Remove(LBoxMails.SelectedItem)
-        updateListBox(LBoxMails.Items, MailConfiguration.FILE_MAILS)
-    End Sub
-
-    Private Sub BtAddMail_Click(sender As Object, e As EventArgs) Handles BtAddMail.Click
-        'Afegeix un mail al llistat de mails
-
-        Dim mail As String
-        Dim mailRep As String
-        Dim trobat As Boolean = False
-        Dim message As New MailMessage
-
-        mail = InputBox("Nou destinatari", "Introduïu la direcció del nou destinatari").Trim
-
-        If mail <> "" Then
-            Try
-                message.To.Add(New MailAddress(mail))
-            Catch ex As Exception
-                MsgBox("Direcció de correu invàlida", vbOKOnly)
-                mail = ""
-            End Try
-
-            If mail <> "" Then
-                For Each mailRep In LBoxMails.Items
-                    If mail = mailRep Then
-                        trobat = True
-                    End If
-                Next
-
-                If Not trobat Then
-                    LBoxMails.Items.Add(mail)
-                    updateListBox(LBoxMails.Items, MailConfiguration.FILE_MAILS)
-                End If
-            End If
-        End If
-    End Sub
-
-
     Private Sub ConfigAlerts_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         'Load Form. Carreguem les dades al form.
-
-        'Carreguem la configuració d'alertes
-        MailConfiguration.getAlarmConfigs()
-
-        If MailConfiguration.mailAlarm = "0" Then
-            CBoxMail.Checked = False
-        Else
-            CBoxMail.Checked = True
-        End If
-        If MailConfiguration.smsAlarm = "0" Then
-            CBoxSMS.Checked = False
-        Else
-            CBoxSMS.Checked = True
-        End If
-
-        'Carreguem el llistat de mails
-        If My.Computer.FileSystem.FileExists(MailConfiguration.FILE_MAILS) Then
-            Dim address As String = ""
-            Dim stReader As System.IO.StreamReader
-            stReader = My.Computer.FileSystem.OpenTextFileReader(MailConfiguration.FILE_MAILS)
-            While Not stReader.EndOfStream
-                address = stReader.ReadLine
-                If address <> "" Then
-                    LBoxMails.Items.Add(address)
-                End If
-            End While
-            stReader.Close()
-        End If
 
         'Carreguem els ports serial disponibles
         CBoxSerialPort.Items.Clear()
@@ -127,48 +61,29 @@ Public Class ConfigAlerts
             BtTestSMS.Enabled = False
         End If
 
-        'Carreguem el llistat de telèfons on enviar SMS
-        If My.Computer.FileSystem.FileExists(SMSConfiguration.FILE_SMS) Then
-            Dim phone As String = ""
-            Dim phoneReader As System.IO.StreamReader
-            phoneReader = My.Computer.FileSystem.OpenTextFileReader(SMSConfiguration.FILE_SMS)
-            While Not phoneReader.EndOfStream
-                phone = phoneReader.ReadLine
-                If phone <> "" Then
-                    LBoxSMS.Items.Add(phone)
-                End If
-            End While
-            phoneReader.Close()
-        End If
+        'Carreguem el llistat de captadors
+        Dim captador As New Captador
+
+        For Each captador In CCC.json.devices
+            CkLBCaptadors.Items.Add(captador.Nom)
+        Next
+
+        'Carreguem el llistat d'usuaris actius
+        updateUsersList()
+
     End Sub
 
-    Private Sub LBoxMails_KeyDown(sender As Object, e As KeyEventArgs) Handles LBoxMails.KeyDown
-        'Tecla "Supr" és el mateix que esborrar
-
-        If e.KeyCode = Keys.Delete Then
-            BtRemoveMail_Click(sender, e)
-        End If
+    Sub updateUsersList()
+        LBUsers.Items.Clear()
+        For Each user In CCC.json.users
+            If user.activeUser Then
+                LBUsers.Items.Add(user.name)
+            End If
+        Next
     End Sub
-
-    Private Sub LBoxSMS_KeyDown(sender As Object, e As KeyEventArgs) Handles LBoxSMS.KeyDown
-        'Tecla "Supr" és el mateix que esborrar
-
-        If e.KeyCode = Keys.Delete Then
-            BtRemovePhone_Click(sender, e)
-        End If
-    End Sub
-
-    Private Sub CBoxMail_CheckedChanged(sender As Object, e As EventArgs) Handles CBoxMail.CheckedChanged
-        MailConfiguration.activateMailSmsAlarms(CBoxMail.Checked, CBoxSMS.Checked)
-    End Sub
-
-    Private Sub CBoxSMS_CheckedChanged(sender As Object, e As EventArgs) Handles CBoxSMS.CheckedChanged
-        MailConfiguration.activateMailSmsAlarms(CBoxMail.Checked, CBoxSMS.Checked)
-    End Sub
-
     Private Sub BtTestSMS_Click(sender As Object, e As EventArgs) Handles BtTestSMS.Click
         'Test del SMS
-        If CCC.threadsmson Then
+        If CCC.threadSMSON Then
             Dim res = MsgBox("Una vegada acabat el test haureu de restaurar la connexió manualment a la finestra principal. Voleu continuar?", vbYesNo)
             If res = vbNo Then
                 Exit Sub
@@ -232,7 +147,7 @@ Public Class ConfigAlerts
     End Sub
 
     Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles CBoxSerialPort.SelectedIndexChanged
-
+        'ComboBox amb els ports 'COM' disponibles
         If CBoxSerialPort.SelectedItem <> Nothing Then
             BtTestSMS.Enabled = True
         Else
@@ -240,53 +155,100 @@ Public Class ConfigAlerts
         End If
     End Sub
 
-    Private Sub BtRemovePhone_Click(sender As Object, e As EventArgs) Handles BtRemovePhone.Click
-        'Esborra el número de telèfon seleccionat a la llista.
-        LBoxSMS.Items.Remove(LBoxSMS.SelectedItem)
-        updateListBox(LBoxSMS.Items, SMSConfiguration.FILE_SMS)
+    Private Sub BtSelectAll_Click(sender As Object, e As EventArgs) Handles BtSelectAll.Click
+        Dim i As Integer = 0
+        While i < CkLBCaptadors.Items.Count
+            CkLBCaptadors.SetItemChecked(i, True)
+            i += 1
+        End While
+
     End Sub
 
-    Private Sub BtNewPhone_Click(sender As Object, e As EventArgs) Handles BtNewPhone.Click
-        'Afegeix un telèfon al llistat de telèfons
+    Private Sub BtDeselectAll_Click(sender As Object, e As EventArgs) Handles BtDeselectAll.Click
+        Dim i As Integer = 0
+        While i < CkLBCaptadors.Items.Count
+            CkLBCaptadors.SetItemChecked(i, False)
+            i += 1
+        End While
+    End Sub
 
-        Dim phone As String
-        Dim phoneRep As String
-        Dim trobat As Boolean = False
-        Dim correcte As Integer = -1
+    Private Sub BtAddUser_Click(sender As Object, e As EventArgs) Handles BtAddUser.Click
+        UserForm.Show()
+    End Sub
 
-        phone = InputBox("Nou destinatari de SMS", "Introduïu el telèfon del nou destinatari").Trim
-
-        If phone <> "" Then
-            correcte = CCC.comprovaTelefon(phone)
-            If correcte <> -1 Then
-                For Each phoneRep In LBoxSMS.Items
-                    If phone = phoneRep Then
-                        trobat = True
-                    End If
-                Next
-                If Not trobat Then
-                    LBoxSMS.Items.Add(phone)
-                    updateListBox(LBoxSMS.Items, SMSConfiguration.FILE_SMS)
-                End If
-            Else
-                MsgBox("El telèfon no és correcte", vbOKOnly)
+    Private Sub BtRemoveUser_Click(sender As Object, e As EventArgs) Handles BtRemoveUser.Click
+        If LBUsers.SelectedItem <> Nothing Then
+            Dim userName = LBUsers.Items(LBUsers.SelectedIndex)
+            Dim id = JsonFile.getId(userName)
+            If id >= 0 Then
+                JsonFile.removeUser(id)
             End If
+            updateUsersList()
         End If
     End Sub
 
-    Sub updateListBox(ByVal listOfItems As ListBox.ObjectCollection, ByRef file2update As String)
-        'Actualitza el fitxer de telèfons.
+    Private Sub BtModifyUser_Click(sender As Object, e As EventArgs) Handles BtModifyUser.Click
 
-        Dim item As New Object
-
-        If Not My.Computer.FileSystem.FileExists(file2update) Then
-            IOTextFiles.createFile(file2update)
+        If LBUsers.SelectedIndex <> Nothing And LBUsers.Items.Count > 0 Then
+            Dim userName = LBUsers.Items(LBUsers.SelectedIndex)
+            Dim id = JsonFile.getId(userName)
+            If id <> Nothing Then
+                UserModify.TBUserName.Text = userName
+                UserModify.TBUserPhone.Text = JsonFile.getPhone(id)
+                UserModify.TBUserMail.Text = JsonFile.getMail(id)
+                idToModify = id
+                UserModify.Show()
+            End If
+        Else
+            updateUsersList()
         End If
-        'Esborrem el fitxer
-        My.Computer.FileSystem.WriteAllText(file2update, "", False)
-        'Tornem a omplir el fitxer
-        For Each item In listOfItems
-            My.Computer.FileSystem.WriteAllText(file2update, CStr(item) & vbCrLf, True)
+    End Sub
+
+    Private Sub BtClose_Click(sender As Object, e As EventArgs) Handles BtClose.Click
+        Me.Close()
+    End Sub
+
+    Private Sub LBUsers_SelectedIndexChanged(sender As Object, e As EventArgs) Handles LBUsers.SelectedIndexChanged
+        'Marcar els captadors que té seleccionats aquest usuari.
+        If LBUsers.SelectedIndex >= 0 Then
+            Dim selectedUser As String = LBUsers.SelectedItem.ToString
+            Dim devicesList As New List(Of String)
+            Dim userId = JsonFile.getId(selectedUser)
+
+            devicesList = JsonFile.getAssignedToUser(userId)
+            Dim ending = CkLBCaptadors.Items.Count
+            Dim i As Integer = 0
+            While i < ending
+                Dim index = devicesList.IndexOf(CkLBCaptadors.Items(i))
+                If index >= 0 Then
+                    CkLBCaptadors.SetItemCheckState(i, CheckState.Checked)
+                Else
+                    CkLBCaptadors.SetItemCheckState(i, CheckState.Unchecked)
+                End If
+                i += 1
+            End While
+        End If
+    End Sub
+
+    Private Sub LBUsers_KeyDown(sender As Object, e As KeyEventArgs) Handles LBUsers.KeyDown
+        If e.KeyCode = Keys.Delete Then
+            BtRemoveUser_Click(sender, e)
+        End If
+    End Sub
+
+    Private Sub BtAssignDevices_Click(sender As Object, e As EventArgs) Handles BtAssignDevices.Click
+        'Tots els captadors marcats seran els captadors assignats a l'usuari, independentment dels captadors que tenia abans
+        Dim user As String = LBUsers.SelectedItem
+        Dim id As Integer = JsonFile.getId(user)
+
+        Dim devices As New List(Of String)
+        Dim device As String
+
+        For Each device In CkLBCaptadors.CheckedItems
+            devices.Add(device)
         Next
+        JsonFile.setAssignedUser(devices, id)
+
     End Sub
 End Class
+
