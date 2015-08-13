@@ -46,21 +46,21 @@ Partial Class FormConfigMail
         Me.TBoxLogin.Location = New System.Drawing.Point(88, 87)
         Me.TBoxLogin.Name = "TBoxLogin"
         Me.TBoxLogin.Size = New System.Drawing.Size(224, 20)
-        Me.TBoxLogin.TabIndex = 1
+        Me.TBoxLogin.TabIndex = 3
         '
         'TBoxPassword
         '
         Me.TBoxPassword.Location = New System.Drawing.Point(88, 113)
         Me.TBoxPassword.Name = "TBoxPassword"
         Me.TBoxPassword.Size = New System.Drawing.Size(224, 20)
-        Me.TBoxPassword.TabIndex = 2
+        Me.TBoxPassword.TabIndex = 4
         '
         'BtConfigMailNow
         '
         Me.BtConfigMailNow.Location = New System.Drawing.Point(180, 143)
         Me.BtConfigMailNow.Name = "BtConfigMailNow"
         Me.BtConfigMailNow.Size = New System.Drawing.Size(130, 30)
-        Me.BtConfigMailNow.TabIndex = 20
+        Me.BtConfigMailNow.TabIndex = 5
         Me.BtConfigMailNow.Text = "Acceptar"
         Me.BtConfigMailNow.UseVisualStyleBackColor = True
         '
@@ -96,7 +96,7 @@ Partial Class FormConfigMail
         Me.TBoxPort.Location = New System.Drawing.Point(88, 61)
         Me.TBoxPort.Name = "TBoxPort"
         Me.TBoxPort.Size = New System.Drawing.Size(224, 20)
-        Me.TBoxPort.TabIndex = 24
+        Me.TBoxPort.TabIndex = 2
         '
         'LbPort
         '
@@ -114,7 +114,7 @@ Partial Class FormConfigMail
         Me.CBoxSSL.Location = New System.Drawing.Point(21, 38)
         Me.CBoxSSL.Name = "CBoxSSL"
         Me.CBoxSSL.Size = New System.Drawing.Size(81, 17)
-        Me.CBoxSSL.TabIndex = 26
+        Me.CBoxSSL.TabIndex = 1
         Me.CBoxSSL.Text = "SSL activat"
         Me.CBoxSSL.UseVisualStyleBackColor = True
         '

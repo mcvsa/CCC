@@ -20,7 +20,7 @@ Public Class CCC
     Public Shared json As New JsonFile
 
     Public Const VELOCIDADPUERTO As Integer = 9600 '115200, 9600
-    Const TIME4THREAD As Integer = 4000 'Cada quant de temps mirem els SMS rebuts: 1000
+    Const TIME4THREAD As Integer = 5000 'Cada quant de temps mirem els SMS rebuts: 1000
     Const TIME4SPACE As Integer = 5000 'Cada quant de temps mirem l'espai disponible de disc.
     Const LOWHDD As Long = 314572800 '300 Megues: avís de poc espai al disc dur.
     Const NUMMAXOFSMS As Integer = 30 'Número màxim de missatges al panell de darrers avisos.
@@ -650,8 +650,8 @@ Public Class CCC
                 response = ""
 
                 'Debug:
-                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
+                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
                 'End Debug
                 response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
                 If response = "ERROR" Then
@@ -665,7 +665,7 @@ Public Class CCC
                 'Preparem la resposta per a no tenir problemes amb '\0D' o vbCr
                 returnstr = returnstr.Replace("\0D", vbCr)
                 'Debug
-                'returnstr = returnstr.Replace("\0A", vbCr)
+                returnstr = returnstr.Replace("\0A", vbCr)
                 ' End Debug
 
                 While returnstr.Length > 59 '59 serà el mínim número de caràcters si rebem un SMS
@@ -736,7 +736,7 @@ Public Class CCC
                         datahora = returnstr.Substring(0, indexa)
                         txt.DataHora = datahora.ToString("u")
                     Catch ex As Exception
-                        RoundLog("SMSWorker: SMS error-" & ex.Message)
+                        RoundLog("SMSWorker: SMS error data conversion-" & ex.Message)
                         indexa = returnstr.IndexOf("+CMGL")
                         If indexa < 0 Then
                             indexa = returnstr.Length - 1
@@ -755,7 +755,7 @@ Public Class CCC
                         indexb = returnstr.IndexOf(vbCr)
                         txt.NumFilters = CInt(returnstr.Substring(indexa + 1, indexb - indexa - 1))
                     Catch ex As Exception
-                        RoundLog("SMSWorker: SMS error-" & ex.Message)
+                        RoundLog("SMSWorker: SMS error NumFilters-" & ex.Message)
                         indexa = returnstr.IndexOf("+CMGL")
                         If indexa < 0 Then
                             indexa = returnstr.Length - 1
@@ -817,28 +817,31 @@ Public Class CCC
                                     Dim userID As Integer
                                     For Each userID In json.devices(deviceIndex).UsersList
                                         phone = JsonFile.getPhone(userID)
-                                        Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
-                                        If resSMS <> "OK" Then
-                                            'MsgBox(resSMS, vbOKOnly)
-                                            RoundLog("& Error sending SMS")
-                                        End If
-                                        'Thread.Sleep(TIME2SMS)
-                                        'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
-                                        If connectStablished Then
-                                            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                                            response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
-                                            If response = "ERROR" Then
-                                                RoundLog("& Error: " & "AT+CMGL 2nd time")
-                                                'connectStablished = False
-                                                'ChangeConnectSign(-1)
+                                        If phone <> Nothing Then
+                                            Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
+                                            If resSMS <> "OK" Then
+                                                'MsgBox(resSMS, vbOKOnly)
+                                                RoundLog("& Error sending SMS")
+
                                             End If
-                                            returnstr += response
-                                            returnstr.Replace("\0D", vbCr)
-                                            'Debug:
-                                            'Esborra tots els missatges llegits
-                                            'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
-                                            'response = SMSConfiguration.readFromModem(SerialPort1, "OK")
-                                            'End Debug
+                                            'Thread.Sleep(TIME2SMS)
+                                            'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
+                                            If connectStablished Then
+                                                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                                                response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
+                                                If response = "ERROR" Then
+                                                    RoundLog("& Error: " & "AT+CMGL 2nd time")
+                                                    'connectStablished = False
+                                                    'ChangeConnectSign(-1)
+                                                End If
+                                                returnstr += response
+                                                returnstr.Replace("\0D", vbCr)
+                                                'Debug:
+                                                'Esborra tots els missatges llegits
+                                                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
+                                                'response = SMSConfiguration.readFromModem(SerialPort1, "OK")
+                                                'End Debug
+                                            End If
                                         End If
                                     Next
                                 End If
@@ -877,9 +880,9 @@ Public Class CCC
                 addresses.Add(JsonFile.getMail(userId))
             Next
         End If
-
-        MailConfiguration.sendMail(addresses, smsTxt.AllMessage, smsTxt.Name, MailPriority.Normal)
-
+        If addresses.Count > 0 Then
+            MailConfiguration.sendMail(addresses, smsTxt.AllMessage, smsTxt.Name, MailPriority.Normal)
+        End If
     End Sub
 
     Sub ChangeConnectSign(ByVal [conexio] As Integer)

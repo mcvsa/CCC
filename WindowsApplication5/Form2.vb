@@ -7,8 +7,7 @@ Imports System.Threading
 Public Class ConfigAlerts
 
     Public ReadOnly TEST_MESSAGE = "Missatge de prova"
-
-    Public Shared idToModify As Integer = Nothing
+    Public Shared idToModify As Integer = -1
 
     Private Sub BtTestMail_Click(sender As Object, e As EventArgs) Handles BtTestMail.Click
         'Prova que el mail funcioni. Demana una direcció on enviar.
@@ -101,7 +100,7 @@ Public Class ConfigAlerts
                         Exit While
                     End If
                 End While
-                CCC.Cursor = System.Windows.Forms.Cursors.Default
+                Cursor = System.Windows.Forms.Cursors.Default
             End If
         End If
 
@@ -189,10 +188,10 @@ Public Class ConfigAlerts
 
     Private Sub BtModifyUser_Click(sender As Object, e As EventArgs) Handles BtModifyUser.Click
 
-        If LBUsers.SelectedIndex <> Nothing And LBUsers.Items.Count > 0 Then
+        If LBUsers.SelectedIndex >= 0 Then
             Dim userName = LBUsers.Items(LBUsers.SelectedIndex)
             Dim id = JsonFile.getId(userName)
-            If id <> Nothing Then
+            If id >= 0 Then
                 UserModify.TBUserName.Text = userName
                 UserModify.TBUserPhone.Text = JsonFile.getPhone(id)
                 UserModify.TBUserMail.Text = JsonFile.getMail(id)

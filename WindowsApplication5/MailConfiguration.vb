@@ -26,6 +26,7 @@ Module MailConfiguration
         CCC.json.mailServerConfig.port = portServer
         CCC.json.mailServerConfig.login = loginServer
         CCC.json.mailServerConfig.password = passwdServer
+        IOTextFiles.updateJsonFile(CCC.json)
 
     End Sub
 
@@ -61,7 +62,7 @@ Module MailConfiguration
         Try
             smtp.Send(message)
         Catch ex As Exception
-            CCC.RoundLog("Error testing mail: " & ex.Message)
+            CCC.RoundLog("Error mail: " & ex.Message & "-Missatge: " & message.Body & "-Receptors: " & message.To.ToString)
             Return ex.Message
         End Try
 

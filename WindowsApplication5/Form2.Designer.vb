@@ -29,15 +29,15 @@ Partial Class ConfigAlerts
         Me.SerialPortTest = New System.IO.Ports.SerialPort(Me.components)
         Me.CBoxSerialPort = New System.Windows.Forms.ComboBox()
         Me.GBoxUsers = New System.Windows.Forms.GroupBox()
+        Me.BtAssignDevices = New System.Windows.Forms.Button()
+        Me.BtRemoveUser = New System.Windows.Forms.Button()
+        Me.BtModifyUser = New System.Windows.Forms.Button()
         Me.LBUsers = New System.Windows.Forms.ListBox()
+        Me.BtAddUser = New System.Windows.Forms.Button()
         Me.CkLBCaptadors = New System.Windows.Forms.CheckedListBox()
         Me.BtSelectAll = New System.Windows.Forms.Button()
         Me.BtDeselectAll = New System.Windows.Forms.Button()
         Me.GBoxCaptadors = New System.Windows.Forms.GroupBox()
-        Me.BtAddUser = New System.Windows.Forms.Button()
-        Me.BtRemoveUser = New System.Windows.Forms.Button()
-        Me.BtModifyUser = New System.Windows.Forms.Button()
-        Me.BtAssignDevices = New System.Windows.Forms.Button()
         Me.GBoxConfigAndTest = New System.Windows.Forms.GroupBox()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.BtClose = New System.Windows.Forms.Button()
@@ -96,6 +96,35 @@ Partial Class ConfigAlerts
         Me.GBoxUsers.TabStop = False
         Me.GBoxUsers.Text = "Usuaris"
         '
+        'BtAssignDevices
+        '
+        Me.BtAssignDevices.BackColor = System.Drawing.SystemColors.ControlDark
+        Me.BtAssignDevices.FlatStyle = System.Windows.Forms.FlatStyle.System
+        Me.BtAssignDevices.Location = New System.Drawing.Point(218, 24)
+        Me.BtAssignDevices.Name = "BtAssignDevices"
+        Me.BtAssignDevices.Size = New System.Drawing.Size(100, 100)
+        Me.BtAssignDevices.TabIndex = 32
+        Me.BtAssignDevices.Text = "Assignar captadors a usuari"
+        Me.BtAssignDevices.UseVisualStyleBackColor = False
+        '
+        'BtRemoveUser
+        '
+        Me.BtRemoveUser.Location = New System.Drawing.Point(218, 245)
+        Me.BtRemoveUser.Name = "BtRemoveUser"
+        Me.BtRemoveUser.Size = New System.Drawing.Size(100, 30)
+        Me.BtRemoveUser.TabIndex = 30
+        Me.BtRemoveUser.Text = "Eliminar usuari"
+        Me.BtRemoveUser.UseVisualStyleBackColor = True
+        '
+        'BtModifyUser
+        '
+        Me.BtModifyUser.Location = New System.Drawing.Point(218, 211)
+        Me.BtModifyUser.Name = "BtModifyUser"
+        Me.BtModifyUser.Size = New System.Drawing.Size(100, 30)
+        Me.BtModifyUser.TabIndex = 31
+        Me.BtModifyUser.Text = "Modificar usuari"
+        Me.BtModifyUser.UseVisualStyleBackColor = True
+        '
         'LBUsers
         '
         Me.LBUsers.FormattingEnabled = True
@@ -104,13 +133,21 @@ Partial Class ConfigAlerts
         Me.LBUsers.Size = New System.Drawing.Size(199, 251)
         Me.LBUsers.TabIndex = 0
         '
+        'BtAddUser
+        '
+        Me.BtAddUser.Location = New System.Drawing.Point(218, 175)
+        Me.BtAddUser.Name = "BtAddUser"
+        Me.BtAddUser.Size = New System.Drawing.Size(100, 30)
+        Me.BtAddUser.TabIndex = 29
+        Me.BtAddUser.Text = "Afegir usuari"
+        Me.BtAddUser.UseVisualStyleBackColor = True
+        '
         'CkLBCaptadors
         '
         Me.CkLBCaptadors.CheckOnClick = True
         Me.CkLBCaptadors.ColumnWidth = 132
         Me.CkLBCaptadors.FormattingEnabled = True
         Me.CkLBCaptadors.Location = New System.Drawing.Point(9, 25)
-        Me.CkLBCaptadors.MultiColumn = True
         Me.CkLBCaptadors.Name = "CkLBCaptadors"
         Me.CkLBCaptadors.Size = New System.Drawing.Size(206, 214)
         Me.CkLBCaptadors.TabIndex = 23
@@ -144,44 +181,6 @@ Partial Class ConfigAlerts
         Me.GBoxCaptadors.TabIndex = 28
         Me.GBoxCaptadors.TabStop = False
         Me.GBoxCaptadors.Text = "Captadors"
-        '
-        'BtAddUser
-        '
-        Me.BtAddUser.Location = New System.Drawing.Point(218, 175)
-        Me.BtAddUser.Name = "BtAddUser"
-        Me.BtAddUser.Size = New System.Drawing.Size(100, 30)
-        Me.BtAddUser.TabIndex = 29
-        Me.BtAddUser.Text = "Afegir usuari"
-        Me.BtAddUser.UseVisualStyleBackColor = True
-        '
-        'BtRemoveUser
-        '
-        Me.BtRemoveUser.Location = New System.Drawing.Point(218, 245)
-        Me.BtRemoveUser.Name = "BtRemoveUser"
-        Me.BtRemoveUser.Size = New System.Drawing.Size(100, 30)
-        Me.BtRemoveUser.TabIndex = 30
-        Me.BtRemoveUser.Text = "Eliminar usuari"
-        Me.BtRemoveUser.UseVisualStyleBackColor = True
-        '
-        'BtModifyUser
-        '
-        Me.BtModifyUser.Location = New System.Drawing.Point(218, 211)
-        Me.BtModifyUser.Name = "BtModifyUser"
-        Me.BtModifyUser.Size = New System.Drawing.Size(100, 30)
-        Me.BtModifyUser.TabIndex = 31
-        Me.BtModifyUser.Text = "Modificar usuari"
-        Me.BtModifyUser.UseVisualStyleBackColor = True
-        '
-        'BtAssignDevices
-        '
-        Me.BtAssignDevices.BackColor = System.Drawing.SystemColors.ControlDark
-        Me.BtAssignDevices.FlatStyle = System.Windows.Forms.FlatStyle.System
-        Me.BtAssignDevices.Location = New System.Drawing.Point(218, 24)
-        Me.BtAssignDevices.Name = "BtAssignDevices"
-        Me.BtAssignDevices.Size = New System.Drawing.Size(100, 100)
-        Me.BtAssignDevices.TabIndex = 32
-        Me.BtAssignDevices.Text = "Assignar captadors a usuari"
-        Me.BtAssignDevices.UseVisualStyleBackColor = False
         '
         'GBoxConfigAndTest
         '

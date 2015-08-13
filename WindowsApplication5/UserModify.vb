@@ -23,7 +23,7 @@ Public Class UserModify
                 End If
             End If
 
-            If ConfigAlerts.idToModify <> Nothing Then
+            If ConfigAlerts.idToModify >= 0 Then
                 JsonFile.setName(ConfigAlerts.idToModify, name)
                 JsonFile.setPhone(ConfigAlerts.idToModify, phone)
                 JsonFile.setMail(ConfigAlerts.idToModify, mail)
