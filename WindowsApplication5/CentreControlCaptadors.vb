@@ -626,6 +626,7 @@ Public Class CCC
             Dim response As String = ""
             Dim finalChain As String = "OK" & vbCr & ""
             Dim texts As New List(Of SMSText)
+            Dim unsentTexts As New List(Of unsentWorkaround)
 
             'Forcem mode 'detalls' al mòdem (que no mostri números, sino 'OK' i detalls)
             SMSConfiguration.sendToModem(SerialPort1, "ATV1")
@@ -821,8 +822,11 @@ Public Class CCC
                                             Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
                                             If resSMS <> "OK" Then
                                                 'MsgBox(resSMS, vbOKOnly)
-                                                RoundLog("& Error sending SMS")
-
+                                                RoundLog("& Error sending SMS: " & txt.AllMessage)
+                                                Dim unsent As New unsentWorkaround
+                                                unsent.phone = phone
+                                                unsent.message = txt.AllMessage
+                                                unsentTexts.Add(unsent)
                                             End If
                                             'Thread.Sleep(TIME2SMS)
                                             'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
@@ -836,11 +840,6 @@ Public Class CCC
                                                 End If
                                                 returnstr += response
                                                 returnstr.Replace("\0D", vbCr)
-                                                'Debug:
-                                                'Esborra tots els missatges llegits
-                                                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=1" & Chr(13))
-                                                'response = SMSConfiguration.readFromModem(SerialPort1, "OK")
-                                                'End Debug
                                             End If
                                         End If
                                     Next
@@ -863,6 +862,20 @@ Public Class CCC
                 End While
                 ChangeConnectSign(1)
                 Thread.Sleep(TIME4THREAD)
+                Dim indexUnsent As New List(Of Integer)
+                Dim i As Integer = 0
+                For Each unsentMessage In unsentTexts
+                    Dim resUnsentSMS = SMSConfiguration.sendSMS(unsentMessage.phone, SerialPort1, unsentMessage.message)
+                    If resUnsentSMS = "OK" Then
+                        indexUnsent.add(i)
+                    Else
+                        RoundLog("& Error sending again unsent SMS: " & unsentMessage.message & "-Phone: " & unsentMessage.phone)
+                    End If
+                    i += 1
+                Next
+                For Each index In indexUnsent
+                    unsentTexts.RemoveAt(index)
+                Next
             End While
         Else
             ClosePort(SerialPort1)
@@ -1324,4 +1337,9 @@ Public Class JsonFile
 
     End Sub
 
+End Class
+
+Public Class unsentWorkaround
+    Public phone As String
+    Public message As String
 End Class
