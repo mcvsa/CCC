@@ -172,7 +172,7 @@ Public Class ConfigAlerts
     End Sub
 
     Private Sub BtAddUser_Click(sender As Object, e As EventArgs) Handles BtAddUser.Click
-        UserForm.Show()
+        UserForm.ShowDialog(Me)
     End Sub
 
     Private Sub BtRemoveUser_Click(sender As Object, e As EventArgs) Handles BtRemoveUser.Click
@@ -196,7 +196,7 @@ Public Class ConfigAlerts
                 UserModify.TBUserPhone.Text = JsonFile.getPhone(id)
                 UserModify.TBUserMail.Text = JsonFile.getMail(id)
                 idToModify = id
-                UserModify.Show()
+                UserModify.ShowDialog(Me)
             End If
         Else
             updateUsersList()
