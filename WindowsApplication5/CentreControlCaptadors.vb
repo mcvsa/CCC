@@ -191,9 +191,11 @@ Public Class CCC
                         DataGridView.Item(1, rowindex).Style.BackColor = Color.Yellow
                     Case Captador.RED_OK
                         DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
-                    Case Captador.TOT_OK
-                        DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
+                    Case Captador.UNKNOWN_MESSAGE
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.White
                     Case Captador.FIN_FILTRO
+                        DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
+                    Case Captador.MENSAJE_TEST
                         DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
                     Case Else
                         DataGridView.Item(1, rowindex).Style.BackColor = Color.White
@@ -650,10 +652,8 @@ Public Class CCC
                 returnstr = ""
                 response = ""
 
-                'Debug:
-                'SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
                 SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "ALL" & Chr(34) & Chr(13))
-                'End Debug
+
                 response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
                 If response = "ERROR" Then
                     RoundLog("& Error: " & "AT+CMGL")
@@ -775,7 +775,16 @@ Public Class CCC
                             indexa = returnstr.Length - 1
                         End If
                     End If
-                    txt.Body = returnstr.Substring(0, indexa)
+                    'Workaround "OKAT"
+                    Dim auxTxtBody = returnstr.Substring(0, indexa)
+                    Dim auxIndex = auxTxtBody.IndexOf("OKAT")
+                    If auxIndex < 0 Then
+                        txt.Body = returnstr.Substring(0, indexa)
+                    Else
+                        txt.Body = returnstr.Substring(0, auxIndex)
+                        RoundLog("Found OKAT in message " & auxTxtBody & " from: " & txt.Name)
+                    End If
+                    'End workaround
                     txt.AllMessage = ashole
                     'Apuntem les dades corresponents al captador que toqui
                     Dim indexCaptador As Integer
@@ -1083,8 +1092,9 @@ Public Class Captador
     Public Const RED_OK As String = "XARXA OK"
     Public Const WARNING As String = "WARNING!"
     Public Const FIN_CICLO As String = "CICLE FINALITZAT"
-    Public Const TOT_OK As String = "OK"
+    Public Const UNKNOWN_MESSAGE As String = "MISSATGE NO RECONEGUT"
     Public Const FIN_FILTRO As String = "OK FI DE FILTRE"
+    Public Const MENSAJE_TEST As String = "MISSATGE DE TEST"
     Public Const NO_MESSAGE As String = "-"
 
     'Classe captador: nom, telèfon associat i estat (actiu o no)
@@ -1134,10 +1144,12 @@ Public Class Captador
             LastState = FIN_CICLO
         ElseIf LastMessage.IndexOf("Filtro finaliz") >= 0 Then
             LastState = FIN_FILTRO
+        ElseIf LastMessage.IndexOf("test") >= 0 Then
+            LastState = MENSAJE_TEST
         ElseIf LastMessage = "" Then
             LastState = NO_MESSAGE
         Else
-            LastState = TOT_OK
+            LastState = UNKNOWN_MESSAGE
         End If
 
         Return LastState
