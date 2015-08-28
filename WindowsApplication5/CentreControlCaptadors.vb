@@ -34,11 +34,16 @@ Public Class CCC
     ReadOnly LOG1 As String = Application.StartupPath & "\resources\log.txt.1"
     ReadOnly HISTORIC As String = Application.StartupPath & "\resources\historic"
     Public ReadOnly PATH_REGISTRES As String = Application.StartupPath & "\data\"
+    Public ReadOnly PATH_RESOURCES As String = Application.StartupPath & "\resources\"
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         If Not My.Computer.FileSystem.DirectoryExists(PATH_REGISTRES) Then
             My.Computer.FileSystem.CreateDirectory(PATH_REGISTRES)
+        End If
+
+        If Not My.Computer.FileSystem.DirectoryExists(PATH_RESOURCES) Then
+            My.Computer.FileSystem.CreateDirectory(PATH_RESOURCES)
         End If
 
         JsonFile.updateJsonVar()
