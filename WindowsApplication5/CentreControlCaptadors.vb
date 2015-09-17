@@ -201,7 +201,7 @@ Public Class CCC
                     Case Captador.FIN_FILTRO
                         DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
                     Case Captador.MENSAJE_TEST
-                        DataGridView.Item(1, rowindex).Style.BackColor = Color.GreenYellow
+                        DataGridView.Item(1, rowindex).Style.BackColor = DataGridView.Item(1, rowindex).Style.BackColor
                     Case Else
                         DataGridView.Item(1, rowindex).Style.BackColor = Color.White
                 End Select
@@ -1150,7 +1150,7 @@ Public Class Captador
         ElseIf LastMessage.IndexOf("Filtro finaliz") >= 0 Then
             LastState = FIN_FILTRO
         ElseIf LastMessage.IndexOf("test") >= 0 Then
-            LastState = MENSAJE_TEST
+            LastState = LastState
         ElseIf LastMessage = "" Then
             LastState = NO_MESSAGE
         Else
