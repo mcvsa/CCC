@@ -821,7 +821,7 @@ Public Class CCC
                             If json.devices(indexCaptador).Actiu Then
                                 updateDataGridView(json.devices(indexCaptador))
 
-                                'Envia mails amb un nou thread
+                                'Envia mails amb un nou thread.
                                 Dim threadMailerDaemon As New Thread(AddressOf MailerDaemonWorker)
                                 threadMailerDaemon.Start(txt)
 

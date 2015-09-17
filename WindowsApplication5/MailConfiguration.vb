@@ -40,33 +40,31 @@ Module MailConfiguration
         message.From = New MailAddress(LoginConfig)
         Try
             For Each receiver In email
+                message.To.Clear()
                 message.To.Add(New MailAddress(receiver))
+                message.Body = body
+                message.Subject = subject
+                message.Priority = priority
+
+                If SslConfig = "ON" Then
+                    smtp.EnableSsl = True
+                Else
+                    smtp.EnableSsl = False
+                End If
+
+                smtp.Port = PortConfig
+                smtp.Host = SmtpConfig
+                smtp.Credentials = New Net.NetworkCredential(LoginConfig, PasswdConfig)
+                smtp.Send(message)
             Next
-        Catch ex As Exception
-            Return ex.Message
-        End Try
 
-        message.Body = body
-        message.Subject = subject
-        message.Priority = priority
-
-        If SslConfig = "ON" Then
-            smtp.EnableSsl = True
-        Else
-            smtp.EnableSsl = False
-        End If
-
-        smtp.Port = PortConfig
-        smtp.Host = SmtpConfig
-        smtp.Credentials = New Net.NetworkCredential(LoginConfig, PasswdConfig)
-        Try
-            smtp.Send(message)
         Catch ex As Exception
             CCC.RoundLog("Error mail: " & ex.Message & "-Missatge: " & message.Body & "-Receptors: " & message.To.ToString)
             Return ex.Message
         End Try
 
         Return "OK"
+
     End Function
 
 
