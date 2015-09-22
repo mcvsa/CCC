@@ -36,9 +36,8 @@ Module MailConfiguration
         Dim smtp As New SmtpClient
         Dim receiver As String
         SetMailConfig()
-
-        message.From = New MailAddress(LoginConfig)
         Try
+            message.From = New MailAddress(LoginConfig)
             For Each receiver In email
                 message.To.Clear()
                 message.To.Add(New MailAddress(receiver))
