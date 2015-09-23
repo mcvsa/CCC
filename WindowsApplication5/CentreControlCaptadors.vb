@@ -716,6 +716,10 @@ Public Class CCC
                         'No hi ha res més de nou per a llegir
                         Exit While
                     End If
+
+                    'Apuntem la data de recepció del missatge
+                    txt.DataRx = DateTime.Now.ToString()
+
                     Dim indexb As Integer = 0
                     'Esborrem la primera part del text (que no ens serveix)
                     returnstr = returnstr.Remove(0, indexa + 6)
@@ -742,28 +746,6 @@ Public Class CCC
 
                     'Eliminem part del missatge que ja no ens interessa
                     returnstr = returnstr.Remove(0, indexb)
-
-                    'Busquem la data de recepció del missatge
-                    indexa = returnstr.IndexOf(",")
-                    returnstr = returnstr.Remove(0, indexa + 1)
-                    indexa = returnstr.IndexOf(Chr(34))
-                    returnstr = returnstr.Remove(0, indexa + 1)
-
-                    indexa = returnstr.IndexOf(Chr(34))
-
-                    Dim datahoraRx As DateTime
-                    Try
-                        datahoraRx = returnstr.Substring(0, indexa)
-                        txt.DataRx = datahoraRx.ToString()
-                    Catch ex As Exception
-                        RoundLog("SMSWorker: SMS error data Rx conversion-" & ex.Message)
-                        indexa = returnstr.IndexOf("+CMGL")
-                        If indexa < 0 Then
-                            indexa = returnstr.Length - 1
-                            returnstr.Remove(0, indexa)
-                            Continue While
-                        End If
-                    End Try
 
                     'Busquem el nom del captador
                     'Mirem on comença el nom del captador
