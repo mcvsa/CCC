@@ -413,11 +413,12 @@ Public Class CCC
         If nomAntic <> Nothing Then
             nouNom = InputBox("Quin nom voleu pel captador?", "Nou nom pel captador").Trim()
             If nouNom <> "" Then
-                indexCaptador = buscaCaptador(nouNom)
-                If indexCaptador = -1 Then
-                    json.devices(buscaCaptador(nomAntic)).Nom = nouNom
+                indexNouCaptador = buscaCaptador(nouNom)
+                If indexNouCaptador = -1 Then
+                    indexCaptador = buscaCaptador(nomAntic)
+                    json.devices(indexCaptador).Nom = nouNom
                     IOTextFiles.updateJsonFile(json)
-                    captador.creaRegistreCaptador()
+                    json.devices(indexCaptador).creaRegistreCaptador()
                     InitializeDataGridView()
                     DataGridView.Focus()
                 Else
