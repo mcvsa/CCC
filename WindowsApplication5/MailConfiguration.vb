@@ -37,7 +37,6 @@ Module MailConfiguration
         Dim receiver As String = ""
         CCC.RoundLog("Comencem a enviar mail")
         SetMailConfig()
-        CCC.RoundLog("Config. mail acabada")
         Try
             message.From = New MailAddress(LoginConfig)
             For Each receiver In email

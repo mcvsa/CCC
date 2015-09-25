@@ -55,7 +55,9 @@ Module SMSConfiguration
             Dim resp As String = ""
             CCC.RoundLog("Comencem a enviar SMS amb el text: " & message)
             sendToModem(serialport, "AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
+            CCC.RoundLog("Resposta = " & resp)
             resp = readFromModem(serialport, ">")
+            CCC.RoundLog("resposta modem = " & resp)
             If resp = "ERROR" Then
                 CCC.RoundLog("& Error writing message body")
             End If

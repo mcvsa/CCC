@@ -17,7 +17,16 @@ Module IOTextFiles
         If Not My.Computer.FileSystem.FileExists(file2write) Then
             createFile(file2write)
         End If
-        My.Computer.FileSystem.WriteAllText(file2write, text2write, False)
+        Dim done As Boolean = False
+        While done = False
+            Try
+                My.Computer.FileSystem.WriteAllText(file2write, text2write, False)
+                done = True
+            Catch ex As Exception
+                Continue While
+            End Try
+        End while
+
     End Sub
 
     Public Sub updateJsonFile(ByVal json As Object)
