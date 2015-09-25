@@ -34,31 +34,36 @@ Module MailConfiguration
 
         Dim message As New MailMessage
         Dim smtp As New SmtpClient
-        Dim receiver As String
+        Dim receiver As String = ""
+        CCC.RoundLog("Comencem a enviar mail")
         SetMailConfig()
+        CCC.RoundLog("Config. mail acabada")
         Try
             message.From = New MailAddress(LoginConfig)
             For Each receiver In email
-                message.To.Clear()
-                message.To.Add(New MailAddress(receiver))
-                message.Body = body
-                message.Subject = subject
-                message.Priority = priority
+                CCC.RoundLog("Enviant mail a : " & receiver.ToString)
+                If receiver <> "" Then
+                    message.To.Clear()
+                    message.To.Add(New MailAddress(receiver))
+                    message.Body = body
+                    message.Subject = subject
+                    message.Priority = priority
 
-                If SslConfig = "ON" Then
-                    smtp.EnableSsl = True
-                Else
-                    smtp.EnableSsl = False
+                    If SslConfig = "ON" Then
+                        smtp.EnableSsl = True
+                    Else
+                        smtp.EnableSsl = False
+                    End If
+
+                    smtp.Port = PortConfig
+                    smtp.Host = SmtpConfig
+                    smtp.Credentials = New Net.NetworkCredential(LoginConfig, PasswdConfig)
+                    smtp.Send(message)
                 End If
-
-                smtp.Port = PortConfig
-                smtp.Host = SmtpConfig
-                smtp.Credentials = New Net.NetworkCredential(LoginConfig, PasswdConfig)
-                smtp.Send(message)
             Next
 
         Catch ex As Exception
-            CCC.RoundLog("Error mail: " & ex.Message & "-Missatge: " & message.Body & "-Receptors: " & message.To.ToString)
+            CCC.RoundLog("Error mail: " & ex.Message & "-Missatge: " & body & "-Receptors: " & receiver)
             Return ex.Message
         End Try
 
