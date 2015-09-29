@@ -158,7 +158,11 @@ Public Class CCC
 
         If Me.DataGridView.InvokeRequired Then
             Dim d As New UpdateDataGridViewCallback(AddressOf updateDataGridView)
-            Me.Invoke(d, New Object() {[capta]})
+            If Not tancant Then
+                Me.Invoke(d, New Object() {[capta]})
+            Else
+                Exit Sub
+            End If
 
         Else
             If Not tancant Then
@@ -225,7 +229,7 @@ Public Class CCC
                     DataGridView.ClearSelection()
                 End If
             End If
-            End If
+        End If
 
     End Sub
 
@@ -767,9 +771,14 @@ Public Class CCC
                     indexa = returnstr.IndexOf("+CMGL")
                     If indexa < 0 Then
                         'El darrer caràcter capturat hauria de ser "OK"
-                        indexa = returnstr.IndexOf("OK")
+                        indexa = returnstr.IndexOf(vbCr + "OK" + vbCr)
                         If indexa < 0 Then
                             indexa = returnstr.Length - 1
+                        End If
+                    Else
+                        Dim indexaux = returnstr.IndexOf(vbCr + "OK" + vbCr)
+                        If indexaux >= 0 And indexaux < indexa Then
+                            indexa = indexaux
                         End If
                     End If
                     Dim ashole = returnstr.Substring(indexb, indexa)
@@ -824,7 +833,10 @@ Public Class CCC
                         SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=" & txtRead & Chr(13))
                         indexa = returnstr.IndexOf("+CMGL")
                         If indexa < 0 Then
-                            indexa = returnstr.Length - 1
+                            indexa = returnstr.IndexOf(vbCr & "OK" & vbCr)
+                            If indexa < 0 Then
+                                indexa = returnstr.Length - 1
+                            End If
                             returnstr = returnstr.Remove(0, indexa)
                             Continue While
                         End If
@@ -836,104 +848,102 @@ Public Class CCC
 
                     If indexa < 0 Then
                         'El darrer caràcter capturat hauria de ser "OK"
-                        indexa = returnstr.IndexOf("OK")
+                        indexa = returnstr.IndexOf(vbCr & "OK" & vbCr)
                         If indexa < 0 Then
                             indexa = returnstr.Length - 1
                         End If
                     Else
-                        'Workaround "OK" & vbCr & "AT"
-                        indexaux = returnstr.IndexOf("AT+CMGL")
-                        If indexaux >= 0 And indexaux < indexa Then
-                            RoundLog("Found OKAT in message from: " & txt.Name)
+                        Dim indexaux = returnstr.IndexOf(vbCr & "OK" & vbCr)
+                        If indexaux <> -1 And indexaux < indexa Then
                             indexa = indexaux
                         End If
-                        'End of workaround "OK" & vbCr & "AT"
                     End If
+
                     txt.Body = returnstr.Substring(0, indexa)
 
-        txt.AllMessage = ashole & "Data recep. missatge: " & txt.DataRx
-        'Apuntem les dades corresponents al captador que toqui
-        Dim indexCaptador As Integer
-        indexCaptador = comprovaTelefon(txt.Phone)
-        If indexCaptador >= 0 Or indexCaptador = -2 Then
-            'Si indexCaptador = -2: Cal mostrar el missatge per a que l'usuari
-            'pugui crear el captador i associar-li el telèfon
+                    txt.AllMessage = ashole & vbCr & "Data recep. missatge: " & txt.DataRx
+                    'Apuntem les dades corresponents al captador que toqui
+                    Dim indexCaptador As Integer
+                    indexCaptador = comprovaTelefon(txt.Phone)
+                    If indexCaptador >= 0 Or indexCaptador = -2 Then
+                        'Si indexCaptador = -2: Cal mostrar el missatge per a que l'usuari
+                        'pugui crear el captador i associar-li el telèfon
 
-            vectorSMS.Add(txt)
-            'Ordenem el vector, per si arriben missatges del mateix captador desordenats
-            vectorSMS = vectorSMS.OrderBy(Function(x) x.DataHora).ToList
-            vectorSMS.Reverse()
-            UpdateLastData()
+                        vectorSMS.Add(txt)
+                        'Ordenem el vector, per si arriben missatges del mateix captador desordenats
+                        vectorSMS = vectorSMS.OrderBy(Function(x) x.DataHora).ToList
+                        vectorSMS.Reverse()
+                        UpdateLastData()
 
-            If indexCaptador >= 0 Then
-                json.devices(indexCaptador).addData(SMSText.Form(txt))
+                        If indexCaptador >= 0 Then
+                            json.devices(indexCaptador).addData(SMSText.Form(txt))
 
-                'Si el captador està seleccionat mostrarem l'historial actualitzat
-                If DataGridView.CurrentRow.Index <> Nothing Then
-                    If DataGridView.CurrentRow.Index = indexCaptador Then
-                        MostraHistorial(json.devices(indexCaptador).Nom)
-                    End If
-                End If
-                'Actualitzem el panell dels darrers missatges i la resta de dades per pantalla
-                '...sempre que el captador estigui actiu
-                If json.devices(indexCaptador).Actiu Then
-                    JsonFile.SetReceptionDate(txt.DataRx, indexCaptador)
-
-                    'Envia mails amb un nou thread.
-                    Dim threadMailerDaemon As New Thread(AddressOf MailerDaemonWorker)
-                    threadMailerDaemon.Start(txt)
-
-                    'Envia SMS
-                    Dim phone As String = ""
-                    Dim userID As Integer
-                    For Each userID In json.devices(indexCaptador).UsersList
-                        phone = JsonFile.getPhone(userID)
-                        If phone <> Nothing And phone <> "" Then
-                            Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
-                            If resSMS <> "OK" Then
-                                JsonFile.SetLastMessageStatus(STATUS_NO, indexCaptador)
-                                RoundLog("& Error sending SMS: " & txt.AllMessage)
-                                Dim unsent As New unsentWorkaround
-                                unsent.indexOfCaptador = indexCaptador
-                                unsent.phone = phone
-                                unsent.message = txt.AllMessage
-                                unsentTexts.Add(unsent)
-                            Else
-                                JsonFile.SetLastMessageStatus(DateTime.Now.ToString(), indexCaptador)
-                            End If
-                            RoundLog("Res SMS = " & resSMS.ToString)
-                            'Thread.Sleep(TIME2SMS)
-                            'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
-                            If connectStablished Then
-                                SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
-                                response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
-                                RoundLog(response.ToString)
-                                If response = "ERROR" Then
-                                    RoundLog("& Error: " & "AT+CMGL 2nd time")
-                                    'connectStablished = False
-                                    'ChangeConnectSign(-1)
+                            'Si el captador està seleccionat mostrarem l'historial actualitzat
+                            If DataGridView.CurrentRow.Index <> Nothing Then
+                                If DataGridView.CurrentRow.Index = indexCaptador Then
+                                    MostraHistorial(json.devices(indexCaptador).Nom)
                                 End If
-                                returnstr += response
-                                returnstr = returnstr.Replace("\0D", vbCr)
+                            End If
+                            'Actualitzem el panell dels darrers missatges i la resta de dades per pantalla
+                            '...sempre que el captador estigui actiu
+                            If json.devices(indexCaptador).Actiu Then
+                                JsonFile.SetReceptionDate(txt.DataRx, indexCaptador)
+
+                                'Envia mails amb un nou thread.
+                                Dim threadMailerDaemon As New Thread(AddressOf MailerDaemonWorker)
+                                threadMailerDaemon.Start(txt)
+
+                                'Envia SMS
+                                Dim phone As String = ""
+                                Dim userID As Integer
+                                For Each userID In json.devices(indexCaptador).UsersList
+                                    phone = JsonFile.getPhone(userID)
+                                    If phone <> Nothing And phone <> "" Then
+                                        Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
+                                        If resSMS <> "OK" Then
+                                            JsonFile.SetLastMessageStatus(STATUS_NO, indexCaptador)
+                                            RoundLog("& Error sending SMS: " & txt.AllMessage)
+                                            Dim unsent As New unsentWorkaround
+                                            unsent.indexOfCaptador = indexCaptador
+                                            unsent.phone = phone
+                                            unsent.message = txt.AllMessage
+                                            unsentTexts.Add(unsent)
+                                        Else
+                                            JsonFile.SetLastMessageStatus(DateTime.Now.ToString(), indexCaptador)
+                                        End If
+                                        RoundLog("Res SMS = " & resSMS.ToString)
+                                        'Thread.Sleep(TIME2SMS)
+                                        'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
+                                        If connectStablished Then
+                                            SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
+                                            response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
+                                            RoundLog(response.ToString)
+                                            If response = "ERROR" Then
+                                                RoundLog("& Error: " & "AT+CMGL 2nd time")
+                                                'connectStablished = False
+                                                'ChangeConnectSign(-1)
+                                            End If
+                                            returnstr += response
+                                            returnstr = returnstr.Replace("\0D", vbCr)
+                                        End If
+                                    End If
+                                Next
+
+                                updateDataGridView(json.devices(indexCaptador))
                             End If
                         End If
-                    Next
 
-                    updateDataGridView(json.devices(indexCaptador))
-                End If
-            End If
+                    ElseIf (indexCaptador = -1) Then
+                        RoundLog("Telèfon " & txt.Phone & " erroni")
+                    Else
+                        RoundLog("Error amb el telèfon " & txt.Phone)
+                    End If
 
-        ElseIf (indexCaptador = -1) Then
-            RoundLog("Telèfon " & txt.Phone & " erroni")
-        Else
-            RoundLog("Error amb el telèfon " & txt.Phone)
-        End If
-
-        'Debug
-        'Esborrem el missatge llegit:
-        SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=" & txtRead & Chr(13))
-        response = SMSConfiguration.readFromModem(SerialPort1, "OK")
-        'End Debug
+                    'Debug
+                    'Esborrem el missatge llegit:
+                    SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=" & txtRead & Chr(13))
+                    response = SMSConfiguration.readFromModem(SerialPort1, "OK")
+                    'End Debug
 
                 End While
                 'ChangeConnectSign(1)
