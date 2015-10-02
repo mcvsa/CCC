@@ -29,8 +29,8 @@ Module IOTextFiles
     End Sub
 
     Public Sub updateJsonFile(ByVal json As Object)
-        Dim jsonStr As String = JsonConvert.SerializeObject(json)
         SyncLock (updatingLock)
+            Dim jsonStr As String = JsonConvert.SerializeObject(json)
             writeFile(CCC.SETTINGSFILE, jsonStr)
         End SyncLock
     End Sub
