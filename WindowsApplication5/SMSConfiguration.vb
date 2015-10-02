@@ -18,7 +18,7 @@ Module SMSConfiguration
 
     Function openPort(ByVal serialPortName As String, ByRef serialPort As System.IO.Ports.SerialPort)
         Try
-            CCC.RoundLog("Obrint port")
+            IOTextFiles.RoundLog("Obrint port")
             With serialPort
                 If .IsOpen Then
                     serialPort.Close()
@@ -47,25 +47,25 @@ Module SMSConfiguration
     End Function
 
     Function sendSMS(ByVal phone As String, ByRef serialport As System.IO.Ports.SerialPort, ByRef message As String)
-        CCC.RoundLog("Enviant SMS al tlf: " & phone)
+        IOTextFiles.RoundLog("Enviant SMS al tlf: " & phone)
         phone = phone.Replace(".", "")
         If CCC.comprovaTelefon(phone) = -1 Then
             Return ("Telèfon incorrecte")
         Else
             Dim resp As String = ""
-            CCC.RoundLog("Comencem a enviar SMS amb el text: " & message)
+            IOTextFiles.RoundLog("Comencem a enviar SMS amb el text: " & message)
             sendToModem(serialport, "AT+CMGS=" & Chr(34) & "+34" & phone & Chr(34) & Chr(13))
-            CCC.RoundLog("Resposta = " & resp)
+            IOTextFiles.RoundLog("Resposta = " & resp)
             resp = readFromModem(serialport, ">")
-            CCC.RoundLog("resposta modem = " & resp)
+            IOTextFiles.RoundLog("resposta modem = " & resp)
             If resp = "ERROR" Then
-                CCC.RoundLog("& Error writing message body")
+                IOTextFiles.RoundLog("& Error writing message body")
             End If
             'Thread.Sleep(SLEEPING_TIME)
             sendToModem(serialport, message & vbCrLf & Chr(26))
             resp = readFromModem(serialport, "OK")
             If resp = "ERROR" Then
-                CCC.RoundLog("& Error sending SMS")
+                IOTextFiles.RoundLog("& Error sending SMS")
                 Return resp
             End If
             Return "OK"
@@ -75,13 +75,12 @@ Module SMSConfiguration
 
     Public Sub sendToModem(ByRef serialport As System.IO.Ports.SerialPort, ByVal dataToSend As String)
         If serialport.IsOpen Then
-            'CCC.RoundLog("Enviant al modem: " & dataToSend)
             Try
                 'serialport.DiscardOutBuffer()
                 serialport.Write(dataToSend & Chr(13))
                 'serialport.DiscardOutBuffer()
             Catch ex As Exception
-                CCC.RoundLog("Error sending: " & dataToSend & "-" & ex.Message)
+                IOTextFiles.RoundLog("Error sending: " & dataToSend & "-" & ex.Message)
                 'MsgBox(ex.Message, vbCritical)
             End Try
         End If
@@ -90,7 +89,6 @@ Module SMSConfiguration
 
     Public Function readFromModem(ByRef serialport As System.IO.Ports.SerialPort, ByVal finalChar As String)
         'If serialport.IsOpen Then
-        'CCC.RoundLog("Llegint del modem. FinalChar = " & finalChar)
         Dim response As String = ""
         Try
             If finalChar = ">" Then
@@ -109,11 +107,10 @@ Module SMSConfiguration
 
                 While (response.IndexOf(finalChar) < 0)
                     response += serialport.ReadLine
-                    'CCC.RoundLog("Resposta = " + response)
                 End While
             End If
         Catch ex As Exception
-            CCC.RoundLog("Error receiving " & finalChar & "-" & ex.Message)
+            IOTextFiles.RoundLog("Error receiving " & finalChar & "-" & ex.Message)
             Return "ERROR"
         End Try
         Return response

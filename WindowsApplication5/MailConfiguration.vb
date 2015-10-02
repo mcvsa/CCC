@@ -35,12 +35,12 @@ Module MailConfiguration
         Dim message As New MailMessage
         Dim smtp As New SmtpClient
         Dim receiver As String = ""
-        CCC.RoundLog("Comencem a enviar mail")
+        IOTextFiles.RoundLog("Comencem a enviar mail")
         SetMailConfig()
         Try
             message.From = New MailAddress(LoginConfig)
             For Each receiver In email
-                CCC.RoundLog("Enviant mail a : " & receiver.ToString)
+                IOTextFiles.RoundLog("Enviant mail a : " & receiver.ToString)
                 If receiver <> "" Then
                     message.To.Clear()
                     message.To.Add(New MailAddress(receiver))
@@ -62,7 +62,7 @@ Module MailConfiguration
             Next
 
         Catch ex As Exception
-            CCC.RoundLog("Error mail: " & ex.Message & "-Missatge: " & body & "-Receptors: " & receiver)
+            IOTextFiles.RoundLog("Error mail: " & ex.Message & "-Missatge: " & body & "-Receptors: " & receiver)
             Return ex.Message
         End Try
 

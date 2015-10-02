@@ -96,7 +96,7 @@ Public Class ConfigAlerts
                     Thread.Sleep(1000)
                     i += 1
                     If i >= 5 Then
-                        CCC.RoundLog("ThreadSMS not dying!")
+                        IOTextFiles.RoundLog("ThreadSMS not dying!")
                         Exit While
                     End If
                 End While
@@ -110,7 +110,7 @@ Public Class ConfigAlerts
         If serialportname <> "" Then
             response = SMSConfiguration.openPort(serialportname, SerialPortTest)
             If response <> "OK" Then
-                CCC.RoundLog("& problem accessing serial port from Form2")
+                IOTextFiles.RoundLog("& problem accessing serial port from Form2")
                 MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
                 CBoxSerialPort.SelectedItem = Nothing
                 BtTestSMS.Enabled = False
@@ -121,7 +121,7 @@ Public Class ConfigAlerts
         SMSConfiguration.sendToModem(SerialPortTest, "ATV1")
         response = SMSConfiguration.readFromModem(SerialPortTest, "OK")
         If response = "ERROR" Then
-            CCC.RoundLog("& Error: " & "ATV1-TEST")
+            IOTextFiles.RoundLog("& Error: " & "ATV1-TEST")
             MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
             CBoxSerialPort.SelectedItem = Nothing
             BtTestSMS.Enabled = False
@@ -131,7 +131,7 @@ Public Class ConfigAlerts
         SMSConfiguration.sendToModem(SerialPortTest, "AT+CMGF=1")
         response = SMSConfiguration.readFromModem(SerialPortTest, "OK")
         If response = "ERROR" Then
-            CCC.RoundLog("& Error: " & "AT+CMGF=1-TEST")
+            IOTextFiles.RoundLog("& Error: " & "AT+CMGF=1-TEST")
             MsgBox("No s'ha pogut accedir correctament al port", vbCritical)
             CBoxSerialPort.SelectedItem = Nothing
             BtTestSMS.Enabled = False

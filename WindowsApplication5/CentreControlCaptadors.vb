@@ -25,7 +25,6 @@ Public Class CCC
     Const TIME4SPACE As Integer = 5000 'Cada quant de temps mirem l'espai disponible de disc.
     Const LOWHDD As Long = 314572800 '300 Megues: avís de poc espai al disc dur.
     Const NUMMAXOFSMS As Integer = 10 'Número màxim de missatges al panell de darrers avisos.
-    Const MAXLOGENTRIES As Integer = 1000 'Número màxim de línies al log.
     Const NUM_COLS As Integer = 7 'Número de columnes del DataGridView.
     Const TIME2SMS As Integer = 5000 'Temps d'espera per a donar temps al mòdem a processar el SMS anterior.
     Public Const STATUS_NO = "No" 'Estatus del missatge reenviat si no s'ha enviat correctament.
@@ -33,8 +32,8 @@ Public Class CCC
 
     Public ReadOnly SETTINGSFILE As String = Application.StartupPath & "\resources\settings.json"
     Public ReadOnly STARTUP_PATH = Application.StartupPath
-    ReadOnly LOG As String = Application.StartupPath & "\resources\log.txt"
-    ReadOnly LOG1 As String = Application.StartupPath & "\resources\log.txt.1"
+    Public ReadOnly LOG As String = Application.StartupPath & "\resources\log.txt"
+    Public ReadOnly LOG1 As String = Application.StartupPath & "\resources\log.txt.1"
     ReadOnly HISTORIC As String = Application.StartupPath & "\resources\historic"
     Public ReadOnly PATH_REGISTRES As String = Application.StartupPath & "\data\"
     Public ReadOnly PATH_RESOURCES As String = Application.StartupPath & "\resources\"
@@ -159,7 +158,11 @@ Public Class CCC
         If Me.DataGridView.InvokeRequired Then
             Dim d As New UpdateDataGridViewCallback(AddressOf updateDataGridView)
             If Not tancant Then
-                Me.Invoke(d, New Object() {[capta]})
+                Try
+                    Me.Invoke(d, New Object() {[capta]})
+                Catch ex As Exception
+                    IOTextFiles.RoundLog("UpdateDataGridView Thread exception: " & ex.Message)
+                End Try
             Else
                 Exit Sub
             End If
@@ -239,11 +242,15 @@ Public Class CCC
 
         If Me.LVLastMessages.InvokeRequired Then
             Dim x As New UpdateLastDataCallback(AddressOf UpdateLastData)
-            Try
-                Me.Invoke(x)
-            Catch ex As Exception
-                RoundLog(ex.Message)
-            End Try
+            If Not tancant Then
+                Try
+                    Me.Invoke(x)
+                Catch ex As Exception
+                    IOTextFiles.RoundLog(ex.Message)
+                End Try
+            Else
+                Exit Sub
+            End If
         Else
             vectorSMS = vectorSMS.OrderBy(Function(x) x.DataHora).ToList
             vectorSMS.Reverse()
@@ -336,11 +343,15 @@ Public Class CCC
 
         If Me.TBoxHistoric.InvokeRequired Then
             Dim d As New MostraHistorialCallback(AddressOf MostraHistorial)
-            Try
-                Me.Invoke(d, New Object() {[nomCaptador]})
-            Catch ex As Exception
-                RoundLog("MostraHistorial Thread exception: " & ex.Message)
-            End Try
+            If Not tancant Then
+                Try
+                    Me.Invoke(d, New Object() {[nomCaptador]})
+                Catch ex As Exception
+                    IOTextFiles.RoundLog("MostraHistorial Thread exception: " & ex.Message)
+                End Try
+            Else
+                Exit Sub
+            End If
         Else
             If Not tancant Then
                 Dim filereader As String
@@ -549,11 +560,15 @@ Public Class CCC
 
         If Me.BtActualitzaPorts.InvokeRequired Then
             Dim z As New UpdatePortsCallback(AddressOf UpdatePortsList)
-            Try
-                Me.Invoke(z)
-            Catch ex As Exception
-                RoundLog("UpdatePortsList Thread exception: " & ex.Message)
-            End Try
+            If Not tancant Then
+                Try
+                    Me.Invoke(z)
+                Catch ex As Exception
+                    IOTextFiles.RoundLog("UpdatePortsList Thread exception: " & ex.Message)
+                End Try
+            Else
+                Exit Sub
+            End If
         Else
 
             'Show all available COM ports.
@@ -597,7 +612,7 @@ Public Class CCC
                     connectStablished = False
                     ChangeConnectSign(-1)
                     MsgBox(connectat, vbCritical)
-                    RoundLog("Error with connection: " & connectat)
+                    IOTextFiles.RoundLog("Error with connection: " & connectat)
                     UpdatePortsList()
                 End If
             End If
@@ -615,40 +630,6 @@ Public Class CCC
 
     End Sub
 
-    Sub RoundLog(ByVal message As String)
-        'Guarda missatges d'error al log (amb marca de temps). Serà un log de com a màxim 100 línies i
-        'quan arribem a les 100 línies copiarem el log a log.txt.1 i començarem de zero el nou log.
-        Dim marcaTemps As Date
-        marcaTemps = Now
-
-        message = marcaTemps & "-" & message
-
-        If Not My.Computer.FileSystem.FileExists(LOG) Then
-            IOTextFiles.createFile(LOG)
-        End If
-        Dim logLines() As String = File.ReadAllLines(LOG)
-
-        If logLines.Length >= MAXLOGENTRIES Then
-            'Copia el que hi ha al fitxer a log1.txt.1 (i matxaca el que hi havia prèviament)
-            System.IO.File.Copy(LOG, LOG1, True)
-
-            'Esborra el log inicial i el torna a crear per a poder continuar afegint-hi línies
-            System.IO.File.Delete(LOG)
-            'System.IO.File.Create(LOG)
-            IOTextFiles.createFile(LOG)
-        End If
-        Dim done As Boolean = False
-
-        While done = False
-            Try
-                My.Computer.FileSystem.WriteAllText(LOG, message & vbCrLf, True)
-                done = True
-            Catch ex As Exception
-                Thread.Sleep(2)
-                Continue While
-            End Try
-        End While
-    End Sub
 
     Private Sub LBoxPorts_SelectedIndexChanged(sender As Object, e As EventArgs) Handles LBoxPorts.SelectedIndexChanged
         'Activa el botó per a començar la connexió
@@ -680,7 +661,7 @@ Public Class CCC
             SMSConfiguration.sendToModem(SerialPort1, "ATV1")
             response = SMSConfiguration.readFromModem(SerialPort1, "OK")
             If response = "ERROR" Then
-                RoundLog("& Error: " & "ATV1")
+                IOTextFiles.RoundLog("& Error: " & "ATV1")
                 connectStablished = False
                 ChangeConnectSign(-1)
             End If
@@ -689,7 +670,7 @@ Public Class CCC
             SMSConfiguration.sendToModem(SerialPort1, "AT+CMGF=1")
             response = SMSConfiguration.readFromModem(SerialPort1, "OK")
             If response = "ERROR" Then
-                RoundLog("& Error: " & "AT+CMGF=1")
+                IOTextFiles.RoundLog("& Error: " & "AT+CMGF=1")
                 connectStablished = False
                 ChangeConnectSign(-1)
             End If
@@ -702,7 +683,7 @@ Public Class CCC
 
                 response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
                 If response = "ERROR" Then
-                    RoundLog("& Error: " & "AT+CMGL")
+                    IOTextFiles.RoundLog("& Error: " & "AT+CMGL")
                     connectStablished = False
                     ChangeConnectSign(-1)
                     Exit While
@@ -719,7 +700,7 @@ Public Class CCC
                 returnstr = returnstr.Replace("&", vbCr)
 
                 While returnstr.Length > 59 '59 serà el mínim número de caràcters si rebem un SMS
-                    RoundLog("Response: " & returnstr)
+                    IOTextFiles.RoundLog("Response: " & returnstr)
                     'Generem un nou element SMS
                     Dim txt As New SMSText
                     'Mostra de SMS a tractar:
@@ -758,7 +739,7 @@ Public Class CCC
                         indexa = indexa + 3
                     End If
                     txt.Phone = returnstr.Substring(indexa, indexb - indexa)
-                    RoundLog("txt.Phone = " & txt.Phone)
+                    IOTextFiles.RoundLog("txt.Phone = " & txt.Phone)
                     'Eliminem part del missatge que ja no ens interessa
                     returnstr = returnstr.Remove(0, indexb)
 
@@ -794,7 +775,7 @@ Public Class CCC
                     'El nom serà des del final del vbcr fins l'espai anterior al següent vbCr
                     If indexa >= 0 Then
                         txt.Name = returnstr.Substring(indexb, indexa - indexb).Trim
-                        RoundLog("txt.Name = " & txt.Name)
+                        IOTextFiles.RoundLog("txt.Name = " & txt.Name)
                     Else
                         SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=" & txtRead & Chr(13))
                         Continue While
@@ -808,9 +789,9 @@ Public Class CCC
                     Try
                         datahora = returnstr.Substring(0, indexa)
                         txt.DataHora = datahora.ToString()
-                        RoundLog("txt.DataHora = " & txt.DataHora)
+                        IOTextFiles.RoundLog("txt.DataHora = " & txt.DataHora)
                     Catch ex As Exception
-                        RoundLog("SMSWorker: SMS error data conversion-" & ex.Message)
+                        IOTextFiles.RoundLog("SMSWorker: SMS error data conversion-" & ex.Message)
                         SMSConfiguration.sendToModem(SerialPort1, "AT+CMGD=" & txtRead & Chr(13))
                         indexa = returnstr.IndexOf("+CMGL")
                         If indexa < 0 Then
@@ -902,7 +883,7 @@ Public Class CCC
                                         Dim resSMS = SMSConfiguration.sendSMS(phone, SerialPort1, txt.AllMessage)
                                         If resSMS <> "OK" Then
                                             JsonFile.SetLastMessageStatus(STATUS_NO, indexCaptador)
-                                            RoundLog("& Error sending SMS: " & txt.AllMessage)
+                                            IOTextFiles.RoundLog("& Error sending SMS: " & txt.AllMessage)
                                             Dim unsent As New unsentWorkaround
                                             unsent.indexOfCaptador = indexCaptador
                                             unsent.phone = phone
@@ -911,15 +892,15 @@ Public Class CCC
                                         Else
                                             JsonFile.SetLastMessageStatus(DateTime.Now.ToString(), indexCaptador)
                                         End If
-                                        RoundLog("Res SMS = " & resSMS.ToString)
+                                        IOTextFiles.RoundLog("Res SMS = " & resSMS.ToString)
                                         'Thread.Sleep(TIME2SMS)
                                         'Abans d'enviar el següent SMS mirem si hi ha missatges nous rebuts per a no perdre'ls en cas extrem
                                         If connectStablished Then
                                             SMSConfiguration.sendToModem(SerialPort1, "AT+CMGL=" & Chr(34) & "REC UNREAD" & Chr(34) & Chr(13))
                                             response = SMSConfiguration.readFromModem(SerialPort1, finalChain)
-                                            RoundLog(response.ToString)
+                                            IOTextFiles.RoundLog(response.ToString)
                                             If response = "ERROR" Then
-                                                RoundLog("& Error: " & "AT+CMGL 2nd time")
+                                                IOTextFiles.RoundLog("& Error: " & "AT+CMGL 2nd time")
                                                 'connectStablished = False
                                                 'ChangeConnectSign(-1)
                                             End If
@@ -934,9 +915,9 @@ Public Class CCC
                         End If
 
                     ElseIf (indexCaptador = -1) Then
-                        RoundLog("Telèfon " & txt.Phone & " erroni")
+                        IOTextFiles.RoundLog("Telèfon " & txt.Phone & " erroni")
                     Else
-                        RoundLog("Error amb el telèfon " & txt.Phone)
+                        IOTextFiles.RoundLog("Error amb el telèfon " & txt.Phone)
                     End If
 
                     'Debug
@@ -958,7 +939,7 @@ Public Class CCC
                         JsonFile.SetLastMessageStatus(DateTime.Now.ToString(), unsentMessage.indexOfCaptador)
                     Else
                         JsonFile.SetLastMessageStatus(STATUS_NO, unsentMessage.indexOfCaptador)
-                        RoundLog("& Error sending again unsent SMS: " & unsentMessage.message & "-Phone: " & unsentMessage.phone)
+                        IOTextFiles.RoundLog("& Error sending again unsent SMS: " & unsentMessage.message & "-Phone: " & unsentMessage.phone)
                     End If
                     updateDataGridView(json.devices(unsentMessage.indexOfCaptador))
                     i += 1
@@ -999,11 +980,15 @@ Public Class CCC
 
         If Me.LbConnect.InvokeRequired Then
             Dim l As New ChangeLbConnectCallback(AddressOf ChangeConnectSign)
-            Try
-                Me.Invoke(l, New Object() {[conexio]})
-            Catch ex As Exception
-                RoundLog("ChangeConnectSign Thread exception: " & ex.Message)
-            End Try
+            If Not tancant Then
+                Try
+                    Me.Invoke(l, New Object() {[conexio]})
+                Catch ex As Exception
+                    IOTextFiles.RoundLog("ChangeConnectSign Thread exception: " & ex.Message)
+                End Try
+            Else
+                Exit Sub
+            End If
         Else
             Select Case conexio
                 Case 1
@@ -1038,12 +1023,12 @@ Public Class CCC
                 Dim freeHDD = HDDDrive.AvailableFreeSpace
                 If freeHDD < LOWHDD Then
                     MsgBox("Queda poc espai al disc dur", vbCritical)
-                    RoundLog("Queda poc espai al disc dur")
+                    IOTextFiles.RoundLog("Queda poc espai al disc dur")
                 End If
                 Thread.Sleep(TIME4SPACE)
             Catch ex As Exception
                 MsgBox(ex.Message)
-                RoundLog("Error with SpaceWorker: " & ex.Message)
+                IOTextFiles.RoundLog("Error with SpaceWorker: " & ex.Message)
                 freeSpace = False
             End Try
         End While
@@ -1347,7 +1332,7 @@ Public Class JsonFile
             CCC.json = Newtonsoft.Json.JsonConvert.DeserializeObject(Of JsonFile)(filereader)
 
         Catch ex As Exception
-            CCC.RoundLog(ex.ToString)
+            IOTextFiles.RoundLog(ex.ToString)
             My.Computer.FileSystem.CreateDirectory(Application.StartupPath & "\resources")
             Dim newJson As String = JsonConvert.SerializeObject(CCC.json)
             My.Computer.FileSystem.WriteAllText(CCC.SETTINGSFILE, newJson, False)
