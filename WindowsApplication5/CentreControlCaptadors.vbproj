@@ -6,9 +6,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{5865C460-B71E-48E7-9E7F-44C83B8D75A9}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>WindowsApplication5.My.MyApplication</StartupObject>
-    <RootNamespace>WindowsApplication5</RootNamespace>
-    <AssemblyName>WindowsApplication5</AssemblyName>
+    <StartupObject>CentreControlCaptadors.My.MyApplication</StartupObject>
+    <RootNamespace>CentreControlCaptadors</RootNamespace>
+    <AssemblyName>CentreControlCaptadors</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>WindowsForms</MyType>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
@@ -21,7 +21,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>WindowsApplication5.xml</DocumentationFile>
+    <DocumentationFile>CentreControlCaptadors.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
@@ -32,7 +32,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>WindowsApplication5.xml</DocumentationFile>
+    <DocumentationFile>CentreControlCaptadors.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
