@@ -8,11 +8,11 @@ Imports System.Runtime.InteropServices
 
 ' Review the values of the assembly attributes
 
-<Assembly: AssemblyTitle("WindowsApplication5")> 
-<Assembly: AssemblyDescription("")> 
-<Assembly: AssemblyCompany("Hewlett-Packard")> 
-<Assembly: AssemblyProduct("WindowsApplication5")> 
-<Assembly: AssemblyCopyright("Copyright © Hewlett-Packard 2015")> 
+<Assembly: AssemblyTitle("CCC")> 
+<Assembly: AssemblyDescription("Centre Contrl Captadors")> 
+<Assembly: AssemblyCompany("MCV SA")> 
+<Assembly: AssemblyProduct("CentreControlCaptadors")> 
+<Assembly: AssemblyCopyright("Copyright © MCV SA 2015")> 
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)>
