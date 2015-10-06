@@ -1,0 +1,53 @@
+﻿05/10/2015 14:23:29-System.IO.FileNotFoundException: Could not find file 'C:\Users\radar\Documents\Visual Studio 2013\Projects\WindowsApplication5\WindowsApplication5\bin\Debug\resources\settings.json'.
+File name: 'C:\Users\radar\Documents\Visual Studio 2013\Projects\WindowsApplication5\WindowsApplication5\bin\Debug\resources\settings.json'
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   at System.IO.File.InternalReadAllText(String path, Encoding encoding, Boolean checkHost)
+   at Microsoft.VisualBasic.MyServices.FileSystemProxy.ReadAllText(String file)
+   at WindowsApplication5.JsonFile.updateJsonVar() in C:\Users\radar\documents\visual studio 2013\Projects\WindowsApplication5\WindowsApplication5\CentreControlCaptadors.vb:line 1330
+05/10/2015 15:12:29-Comencem a enviar mail
+05/10/2015 15:12:29-Enviant mail a : satradar@mcvsa.com
+05/10/2015 15:14:09-Error mail: The operation has timed out.-Missatge: Això és un missatge de prova-Receptors: satradar@mcvsa.com
+05/10/2015 15:14:24-Comencem a enviar mail
+05/10/2015 15:14:24-Enviant mail a : satradar@mcvsa.com
+05/10/2015 15:15:12-Obrint port
+05/10/2015 15:15:22-Error receiving OK-The operation has timed out.
+05/10/2015 15:15:22-& Error: AT+CMGL
+05/10/2015 15:15:25-Obrint port
+05/10/2015 15:15:36-Obrint port
+05/10/2015 15:15:48-Obrint port
+05/10/2015 15:15:51-Enviant SMS al tlf: 686663429
+05/10/2015 15:15:51-Comencem a enviar SMS amb el text: Missatge de prova
+05/10/2015 15:15:51-Resposta = 
+05/10/2015 15:15:51-resposta modem = AT+CMGS="+34686663429"
+> 
+05/10/2015 15:15:56-Obrint port
+05/10/2015 15:16:39-Response: AT+CMGL="ALL"+CMGL: 0,"REC UNREAD","+34686663429",,"15/10/05,15:15:34+08"  ZAL-2 PM10CAV-A/MSb  31/07/15 12:22Filtro #01/15Filtro finalizadoOK
+05/10/2015 15:16:39-txt.Phone = 686663429
+05/10/2015 15:16:39-txt.Name = ZAL-2 PM10CAV-A/MSb
+05/10/2015 15:16:39-txt.DataHora = 31/07/2015 12:22:00
+05/10/2015 15:16:39-Enviant SMS al tlf: 686663429
+05/10/2015 15:16:39-Comencem a enviar SMS amb el text:   ZAL-2 PM10CAV-A/MSb  31/07/15 12:22Filtro #01/15Filtro finalizadoData recep. missatge: 05/10/2015 15:16:39
+05/10/2015 15:16:39-Resposta = 
+05/10/2015 15:16:39-resposta modem = AT+CMGS="+34686663429"
+> 
+05/10/2015 15:16:39-Comencem a enviar mail
+05/10/2015 15:16:39-Enviant mail a : satradar@mcvsa.com
+05/10/2015 15:16:41-Res SMS = OK
+05/10/2015 15:16:41-AT+CMGL="REC UNREAD"OK
+05/10/2015 15:17:32-Response: AT+CMGL="ALL"+CMGL: 0,"REC UNREAD","+34686663429",,"15/10/05,15:16:32+08" ZAL-2 PM10CAV-A/MSb  31/07/15 12:32Filtro #01/15Mensaje de testOK
+05/10/2015 15:17:32-txt.Phone = 686663429
+05/10/2015 15:17:32-txt.Name = ZAL-2 PM10CAV-A/MSb
+05/10/2015 15:17:32-txt.DataHora = 31/07/2015 12:32:00
+05/10/2015 15:17:32-Enviant SMS al tlf: 686663429
+05/10/2015 15:17:32-Comencem a enviar SMS amb el text:  ZAL-2 PM10CAV-A/MSb  31/07/15 12:32Filtro #01/15Mensaje de testData recep. missatge: 05/10/2015 15:17:32
+05/10/2015 15:17:32-Resposta = 
+05/10/2015 15:17:32-Comencem a enviar mail
+05/10/2015 15:17:33-resposta modem = AT+CMGS="+34686663429"
+> 
+05/10/2015 15:17:33-Enviant mail a : satradar@mcvsa.com
+05/10/2015 15:17:34-Res SMS = OK
+05/10/2015 15:17:34-AT+CMGL="REC UNREAD"OK
+05/10/2015 15:24:46-Obrint port
